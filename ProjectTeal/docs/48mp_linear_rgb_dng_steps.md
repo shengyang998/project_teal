@@ -9,7 +9,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 
 ## 1. Data Ingest & Alignment
 - [x] Implement RAW12 parsing: black/white level, CFA layout, WB gains, normalization to linear.
-- [ ] Linearize ProRAW48 capture (undo EOTF, avoid local ops) into consistent linear space.
+- [x] Linearize ProRAW48 capture (undo EOTF, avoid local ops) into consistent linear space.
 - [ ] Geometric registration: compute 2× scale + translation/warp; validate by downsampling ProRAW48 to 12MP and comparing to demosaiced RAW12 edges.
 - [ ] Add unit tests that load fixtures and assert alignment error thresholds.
 
