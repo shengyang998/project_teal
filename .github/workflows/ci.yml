@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [work]
+
+jobs:
+  lint:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          brew update
+          brew install swiftlint swiftformat
+
+      - name: SwiftLint
+        run: swiftlint --strict --config .swiftlint.yml
+
+      - name: SwiftFormat (lint mode)
+        run: swiftformat . --lint --config .swiftformat

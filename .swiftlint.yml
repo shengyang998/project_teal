@@ -1,0 +1,79 @@
+# SwiftLint configuration for ProjectTeal
+# Targets only the iOS app sources and tests.
+
+included:
+  - ProjectTeal
+
+excluded:
+  - ProjectTeal/docs
+  - memory-bank
+  - .build
+
+opt_in_rules:
+  - anyobject_protocol
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - empty_count
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicit_return
+  - joined_default_parameter
+  - let_var_whitespace
+  - literal_expression_end_indentation
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_parameters
+  - nimble_operator
+  - operator_usage_whitespace
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - toggle_bool
+  - trailing_closure
+  - unavailable_function
+  - unused_declaration
+  - unused_import
+
+analyzer_rules:
+  - unused_import
+
+disabled_rules:
+  - trailing_whitespace
+  - vertical_whitespace
+
+line_length:
+  warning: 120
+  error: 140
+  ignores_comments: true
+  ignores_function_declarations: true
+  ignores_urls: true
+
+identifier_name:
+  min_length: 3
+  excluded:
+    - id
+    - rx
+
+trailing_comma:
+  mandatory_comma: true
+
+vertical_whitespace:
+  max_empty_lines: 2
+
+function_body_length:
+  warning: 80
+  error: 120
+
+file_length:
+  warning: 400
+  error: 800
+
+large_tuple:
+  warning: 3
+  error: 4
+
+indentation:
+  indentation_width: 4

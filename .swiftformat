@@ -1,0 +1,10 @@
+--indent 4
+--allman false
+--wraparguments after-first
+--wrapcollections after-first
+--stripunusedargs closure-only
+--nospaceoperators ..<,...
+--self init-only
+--disable andOperator
+--exclude memory-bank,ProjectTeal/docs,.build
+--importgrouping alphabetical
