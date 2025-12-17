@@ -16,6 +16,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
     private var photoOutput = AVCapturePhotoOutput()
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var rawPixelFormatType: OSType?
+    private let rawPipeline = RAWProcessingPipeline()
 
     private let shutterButton: UIButton = {
         let button = UIButton(type: .system)
@@ -26,6 +27,16 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         button.layer.borderWidth = 2
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
+    }()
+
+    private let statusLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        label.numberOfLines = 2
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Ready for RAW capture"
+        return label
     }()
 
     override func viewDidLoad() {
@@ -126,11 +137,16 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
 
     private func configureUI() {
         view.addSubview(shutterButton)
+        view.addSubview(statusLabel)
         NSLayoutConstraint.activate([
             shutterButton.widthAnchor.constraint(equalToConstant: 70),
             shutterButton.heightAnchor.constraint(equalToConstant: 70),
             shutterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            shutterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24)
+            shutterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
+
+            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -16),
+            statusLabel.bottomAnchor.constraint(equalTo: shutterButton.topAnchor, constant: -12)
         ])
         shutterButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
     }
@@ -165,12 +181,21 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
             return
         }
 
-        guard let data = photo.fileDataRepresentation() else {
-            assertionFailure("fileDataRepresentation() returned nil")
-            return
+        rawPipeline.process(photo: photo) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success(let output):
+                self.saveDNGToPhotoLibrary(url: output.dng.url)
+                self.updateStatus("Wrote linear DNG (\(output.dng.fileSize / 1024) KB)")
+            case .failure:
+                if let data = photo.fileDataRepresentation() {
+                    self.saveToPhotoLibrary(data: data)
+                    self.updateStatus("Saved fallback photo; RAW pipeline failed")
+                } else {
+                    self.updateStatus("Capture failed: no data")
+                }
+            }
         }
-
-        saveToPhotoLibrary(data: data)
     }
 
     private func saveToPhotoLibrary(data: Data) {
@@ -184,6 +209,26 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
                 creationRequest.addResource(with: .photo, data: data, options: options)
             }, completionHandler: nil)
         }
+    }
+
+    private func saveDNGToPhotoLibrary(url: URL) {
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized || status == .limited else {
+                return
+            }
+
+            PHPhotoLibrary.shared().performChanges({
+                let creationRequest = PHAssetCreationRequest.forAsset()
+                let options = PHAssetResourceCreationOptions()
+                options.shouldMoveFile = true
+                options.originalFilename = url.lastPathComponent
+                creationRequest.addResource(with: .photo, fileURL: url, options: options)
+            }, completionHandler: nil)
+        }
+    }
+
+    private func updateStatus(_ message: String) {
+        statusLabel.text = message
     }
 
     private func showPermissionAlert() {
