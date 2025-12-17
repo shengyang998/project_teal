@@ -6,16 +6,18 @@
 - SwiftUI entry `ProjectTealApp` -> `AppRootView` -> `AppRootViewController`.
 - Live camera preview via `AVCaptureVideoPreviewLayer`.
 - Photo capture with Apple ProRAW on supported devices; falls back otherwise.
+- Baseline RAW ingest pipeline that linearizes captures and emits a debuggable DNG artifact.
 - Mac (designed for iPad) and Vision Pro (designed for iPad) support enabled; Mac Catalyst support removed.
+- Privacy keys for camera and photo library add access configured via build settings.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
-- Add Info.plist privacy keys for camera and photo library permissions.
 - iOS RAW ingest and baseline render path using Apple's APIs.
 - UIKit UI with MVVM + RxSwift bindings.
 - Filter pipeline engine and custom filter scaffolding.
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
+- Execution of the 48MP linear RGB DNG step plan in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Current status
 - Early setup phase; requirements and architecture documented.
@@ -24,5 +26,3 @@
 
 ### Known issues
 - Simulator has no camera; preview/capture require device testing.
-
-
