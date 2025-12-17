@@ -23,7 +23,7 @@ struct RAWMetadata {
     init(imageSource: CGImageSource) {
         let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any]
         let raw = properties?[kCGImagePropertyRawDictionary] as? [CFString: Any]
-        iso = raw?[kCGImagePropertyExifISOSpeedRatings] as? [Double]?.first
+        iso = (raw?[kCGImagePropertyExifISOSpeedRatings] as? [Double])?.first
         exposureTimeSeconds = raw?[kCGImagePropertyExifExposureTime] as? Double
         whiteBalance = raw?[kCGImagePropertyExifWhiteBalanceBias] as? [Double]
         blackLevel = raw?[kCGImagePropertyRawBlackLevel] as? Double

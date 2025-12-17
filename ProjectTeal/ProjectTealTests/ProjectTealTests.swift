@@ -28,6 +28,23 @@ struct ProjectTealTests {
         #expect(parsed?.pixelSize == CGSize(width: 4000, height: 3000))
     }
 
+    @Test func parsesDNGFallbackMetadata() throws {
+        let rawDictionary: [CFString: Any] = [
+            kCGImagePropertyDNGBlackLevel: [128.0, 128.0, 128.0, 128.0],
+            kCGImagePropertyDNGWhiteLevel: 16383.0,
+            kCGImagePropertyDNGWhiteBalance: [1.1, 1.0, 0.9]
+        ]
+
+        let parser = RAW12Parser()
+        let parsed = parser.parse(rawProperties: rawDictionary, pixelSize: nil)
+
+        #expect(parsed?.blackLevel == 128)
+        #expect(parsed?.whiteLevel == 16383)
+        #expect(parsed?.whiteBalanceGains == SIMD3(1.1, 1.0, 0.9))
+        #expect(parsed?.cfaPattern == .unknown)
+        #expect(parsed?.pixelSize == nil)
+    }
+
     @Test func normalizesPixelValues() {
         let normalization = RAW12Parser.Normalization(blackLevel: 64, whiteLevel: 4095, whiteBalanceGains: SIMD3(1, 1, 1))
 
