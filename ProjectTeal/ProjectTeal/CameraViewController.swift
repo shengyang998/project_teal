@@ -8,6 +8,8 @@
 import UIKit
 import AVFoundation
 import Photos
+import RxSwift
+import RxCocoa
 
 final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
     private let captureSession = AVCaptureSession()
@@ -16,7 +18,9 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
     private var photoOutput = AVCapturePhotoOutput()
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var rawPixelFormatType: OSType?
-    private let rawPipeline = RAWProcessingPipeline()
+    private let environment: AppEnvironment
+    private let rawPipeline: RAWProcessingPipeline
+    private let disposeBag = DisposeBag()
 
     private let shutterButton: UIButton = {
         let button = UIButton(type: .system)
@@ -39,11 +43,31 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         return label
     }()
 
+    init(environment: AppEnvironment = .shared) {
+        self.environment = environment
+        self.rawPipeline = environment.rawPipeline
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         configureUI()
+        bindStatus()
         checkCameraAuthorization()
+    }
+
+    private func bindStatus() {
+        environment.captureStatus.status
+            .asDriver(onErrorJustReturn: "")
+            .drive(with: self) { controller, message in
+                controller.statusLabel.text = message
+            }
+            .disposed(by: disposeBag)
     }
 
     private func checkCameraAuthorization() {
@@ -228,7 +252,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
     }
 
     private func updateStatus(_ message: String) {
-        statusLabel.text = message
+        environment.captureStatus.update(message)
     }
 
     private func showPermissionAlert() {
