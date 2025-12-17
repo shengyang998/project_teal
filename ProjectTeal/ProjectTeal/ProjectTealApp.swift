@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct ProjectTealApp: App {
+    private let environment = AppEnvironment.shared
+
     var body: some Scene {
         WindowGroup {
-            AppRootView()
+            AppRootView(environment: environment)
         }
     }
 }
