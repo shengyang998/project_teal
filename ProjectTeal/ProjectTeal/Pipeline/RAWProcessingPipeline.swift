@@ -17,6 +17,7 @@ final class RAWProcessingPipeline {
     private let dngWriter: LinearDNGWriter
     private let processingQueue: DispatchQueue
     private let rawParser: RAW12Parser
+    private let proRAWLinearizer: ProRAWLinearizer
 
     struct Result {
         let dng: LinearDNGWriter.Output
@@ -33,11 +34,13 @@ final class RAWProcessingPipeline {
     init(contextProvider: CIContextProviding = CIContextProvider.shared,
          dngWriter: LinearDNGWriter = LinearDNGWriter(),
          processingQueue: DispatchQueue = DispatchQueue(label: "ProjectTeal.raw.pipeline"),
-         rawParser: RAW12Parser = RAW12Parser()) {
+         rawParser: RAW12Parser = RAW12Parser(),
+         proRAWLinearizer: ProRAWLinearizer? = nil) {
         self.contextProvider = contextProvider
         self.dngWriter = dngWriter
         self.processingQueue = processingQueue
         self.rawParser = rawParser
+        self.proRAWLinearizer = proRAWLinearizer ?? ProRAWLinearizer(contextProvider: contextProvider)
     }
 
     /// Executes the baseline pipeline: load RAW -> ensure linear space -> export DNG.
@@ -68,7 +71,8 @@ final class RAWProcessingPipeline {
             return .failure(.renderFailure)
         }
 
-        guard let cgImage = makeLinearCGImage(from: data, normalization: parsed.normalization) else {
+        guard let cgImage = proRAWLinearizer.makeLinearCGImage(from: data,
+                                                                normalization: parsed.normalization) else {
             return .failure(.renderFailure)
         }
 
@@ -81,22 +85,6 @@ final class RAWProcessingPipeline {
         } catch {
             return .failure(.renderFailure)
         }
-    }
-
-    private func makeLinearCGImage(from data: Data, normalization: RAW12Parser.Normalization) -> CGImage? {
-        // Prefer the RAW image at index 0; CIImage will honor orientation metadata.
-        let options: [CIImageOption: Any] = [
-            .applyOrientationProperty: true,
-            .cache: false
-        ]
-        guard let ciImage = CIImage(data: data, options: options) else {
-            return nil
-        }
-
-        // Force linear output; remove any tone curve by transforming from sRGB tone curve to linear.
-        let linearImage = ciImage.applyingFilter("CISRGBToneCurveToLinear")
-        let normalizedImage = normalization.applying(to: linearImage)
-        return contextProvider.renderLinearCGImage(from: normalizedImage)
     }
 
     private static func makeOutputURL() -> URL {
