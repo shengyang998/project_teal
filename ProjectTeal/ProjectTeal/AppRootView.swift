@@ -9,11 +9,7 @@ import SwiftUI
 import UIKit
 
 struct AppRootView: View {
-    let environment: AppEnvironment
-
-    init(environment: AppEnvironment = .shared) {
-        self.environment = environment
-    }
+    @Environment(\.appEnvironment) private var environment
 
     var body: some View {
         AppRootViewControllerRepresentable(environment: environment)
@@ -30,7 +26,7 @@ struct AppRootViewControllerRepresentable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> AppRootViewController {
         return AppRootViewController(environment: environment)
     }
-    
+
     func updateUIViewController(_ uiViewController: AppRootViewController, context: Context) {
         // No updates needed for now
     }

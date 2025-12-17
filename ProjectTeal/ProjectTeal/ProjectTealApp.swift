@@ -13,7 +13,8 @@ struct ProjectTealApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppRootView(environment: environment)
+            AppRootView()
+                .appEnvironment(environment)
         }
     }
 }

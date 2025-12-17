@@ -12,11 +12,11 @@ import RxRelay
 struct AppEnvironment {
     static let shared = AppEnvironment()
 
-    let ciContextProvider: CIContextProvider
+    let ciContextProvider: CIContextProviding
     let rawPipeline: RAWProcessingPipeline
     let captureStatus: CaptureStatusStore
 
-    init(ciContextProvider: CIContextProvider = .shared,
+    init(ciContextProvider: CIContextProviding = CIContextProvider.shared,
          rawPipeline: RAWProcessingPipeline? = nil,
          captureStatus: CaptureStatusStore = CaptureStatusStore()) {
         self.ciContextProvider = ciContextProvider
