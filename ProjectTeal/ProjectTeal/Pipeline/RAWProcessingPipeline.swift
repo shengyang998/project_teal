@@ -13,7 +13,7 @@ import UniformTypeIdentifiers
 
 /// Encapsulates ingestion of AVCapturePhoto RAW data into a linear RGB DNG artifact.
 final class RAWProcessingPipeline {
-    private let contextProvider: CIContextProvider
+    private let contextProvider: CIContextProviding
     private let dngWriter: LinearDNGWriter
     private let processingQueue: DispatchQueue
 
@@ -28,7 +28,7 @@ final class RAWProcessingPipeline {
         case renderFailure
     }
 
-    init(contextProvider: CIContextProvider = .shared,
+    init(contextProvider: CIContextProviding = CIContextProvider.shared,
          dngWriter: LinearDNGWriter = LinearDNGWriter(),
          processingQueue: DispatchQueue = DispatchQueue(label: "ProjectTeal.raw.pipeline")) {
         self.contextProvider = contextProvider

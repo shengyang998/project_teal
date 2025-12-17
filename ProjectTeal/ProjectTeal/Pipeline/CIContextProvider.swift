@@ -8,8 +8,13 @@
 import CoreImage
 import CoreGraphics
 
-/// Provides a shared CIContext configured for linear output suitable for RAW pipelines.
-struct CIContextProvider {
+/// Provides access to a shared CIContext configured for linear output suitable for RAW pipelines.
+protocol CIContextProviding {
+    var context: CIContext { get }
+    func renderLinearCGImage(from image: CIImage, clamped: Bool) -> CGImage?
+}
+
+struct CIContextProvider: CIContextProviding {
     static let shared = CIContextProvider()
 
     /// Lazily created CIContext bound to a linear color space.
