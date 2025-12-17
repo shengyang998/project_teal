@@ -12,6 +12,7 @@
 - Implemented `CameraViewController` with preview and ProRAW capture; embedded in root VC.
 - Removed Mac Catalyst support; added Mac (designed for iPad) and Vision Pro (designed for iPad) support.
 - Captured near-term execution priorities in `ProjectTeal/docs/48mp_linear_rgb_dng_plan.md` to focus alignment, forward-operator, and iOS prototyping work.
+- Added a synthetic geometric registration estimator (downsample + cross-correlation) with tests and marked the alignment step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
 - Scaffold repo layout and SPM packages.
@@ -20,7 +21,7 @@
 - Create `tools/python/requirements.txt` and `ci_inspect.py` for histograms/side-by-sides.
 - Add Info.plist camera and photo library usage descriptions.
 - Test camera permissions on Mac (designed for iPad) and Vision Pro (designed for iPad) platforms.
-- Build alignment fixtures + evaluation harness and wire in forward-operator unit tests before training.
+- Swap synthetic alignment tests for fixture-backed thresholds and wire forward-operator unit tests before training.
 - Prototype tiled inference without the model to baseline device memory/latency envelopes.
 
 ### Resolved Decisions
