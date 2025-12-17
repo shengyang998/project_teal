@@ -8,15 +8,25 @@
 import UIKit
 
 class AppRootViewController: UIViewController {
-    
+    private let environment: AppEnvironment
+
+    init(environment: AppEnvironment = .shared) {
+        self.environment = environment
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         // Set a default background color
         view.backgroundColor = .systemBackground
 
         // Embed camera view controller full-screen
-        let cameraVC = CameraViewController()
+        let cameraVC = CameraViewController(environment: environment)
         addChild(cameraVC)
         cameraVC.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(cameraVC.view)
