@@ -62,3 +62,9 @@ Deliverables include preprocessing, trainable model + training code, iOS inferen
 4. Add residual head if needed.
 5. Integrate tiled inference on iOS.
 6. Finalize linear DNG writer and compatibility tests.
+
+## Near-Term Execution Priorities
+- **Alignment gates**: lock scale/offset/warp estimates on a small curated fixture set and codify pass/fail thresholds (PSNR/L1 + edge overlays) before training begins.
+- **Forward operator validation**: implement the quad-bayer mosaic + 2×2 bin forward operator with synthetic-pattern tests to guarantee differentiable parity with the device binner.
+- **Data hygiene**: keep a repeatable pipeline for linearizing RAW12 and ProRAW48 captures (scripted in Python/Swift) so training/eval sets are traceable and re-runnable.
+- **iOS prototyping**: stand up a minimal tiled inference prototype (no model yet) to validate memory/latency envelopes for 48MP processing on target devices.

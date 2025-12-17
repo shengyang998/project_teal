@@ -18,11 +18,14 @@
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
 - Execution of the 48MP linear RGB DNG step plan in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md`.
+- Alignment fixtures + forward-operator tests to gate model training.
+- Early tiled-inference prototype (no model) to validate device memory/latency envelopes for 48MP frames.
 
 ### Current status
 - Early setup phase; requirements and architecture documented.
 - Camera view controller implemented and embedded; ProRAW capture path in place.
 - Key decisions resolved: iOS 18+, UIKit, iOS RAW only, Display P3/HDR, Apple API preference.
+- Near-term plan clarified with alignment/forward-operator gates before training and tiled-prototype validation on device.
 
 ### Known issues
 - Simulator has no camera; preview/capture require device testing.
