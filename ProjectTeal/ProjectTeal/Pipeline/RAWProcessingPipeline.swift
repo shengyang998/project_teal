@@ -16,10 +16,12 @@ final class RAWProcessingPipeline {
     private let contextProvider: CIContextProviding
     private let dngWriter: LinearDNGWriter
     private let processingQueue: DispatchQueue
+    private let rawParser: RAW12Parser
 
     struct Result {
         let dng: LinearDNGWriter.Output
         let metadata: RAWMetadata
+        let rawParsing: RAW12Parser.Parsed
     }
 
     enum Error: Swift.Error {
@@ -30,10 +32,12 @@ final class RAWProcessingPipeline {
 
     init(contextProvider: CIContextProviding = CIContextProvider.shared,
          dngWriter: LinearDNGWriter = LinearDNGWriter(),
-         processingQueue: DispatchQueue = DispatchQueue(label: "ProjectTeal.raw.pipeline")) {
+         processingQueue: DispatchQueue = DispatchQueue(label: "ProjectTeal.raw.pipeline"),
+         rawParser: RAW12Parser = RAW12Parser()) {
         self.contextProvider = contextProvider
         self.dngWriter = dngWriter
         self.processingQueue = processingQueue
+        self.rawParser = rawParser
     }
 
     /// Executes the baseline pipeline: load RAW -> ensure linear space -> export DNG.
@@ -60,7 +64,11 @@ final class RAWProcessingPipeline {
         }
 
         let metadata = RAWMetadata(imageSource: imageSource)
-        guard let cgImage = makeLinearCGImage(from: data) else {
+        guard let parsed = rawParser.parse(imageSource: imageSource) else {
+            return .failure(.renderFailure)
+        }
+
+        guard let cgImage = makeLinearCGImage(from: data, normalization: parsed.normalization) else {
             return .failure(.renderFailure)
         }
 
@@ -69,13 +77,13 @@ final class RAWProcessingPipeline {
             let dngOutput = try dngWriter.write(cgImage: cgImage,
                                                 metadata: CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
                                                 destinationURL: outputURL)
-            return .success(Result(dng: dngOutput, metadata: metadata))
+            return .success(Result(dng: dngOutput, metadata: metadata, rawParsing: parsed))
         } catch {
             return .failure(.renderFailure)
         }
     }
 
-    private func makeLinearCGImage(from data: Data) -> CGImage? {
+    private func makeLinearCGImage(from data: Data, normalization: RAW12Parser.Normalization) -> CGImage? {
         // Prefer the RAW image at index 0; CIImage will honor orientation metadata.
         let options: [CIImageOption: Any] = [
             .applyOrientationProperty: true,
@@ -87,7 +95,8 @@ final class RAWProcessingPipeline {
 
         // Force linear output; remove any tone curve by transforming from sRGB tone curve to linear.
         let linearImage = ciImage.applyingFilter("CISRGBToneCurveToLinear")
-        return contextProvider.renderLinearCGImage(from: linearImage)
+        let normalizedImage = normalization.applying(to: linearImage)
+        return contextProvider.renderLinearCGImage(from: normalizedImage)
     }
 
     private static func makeOutputURL() -> URL {
