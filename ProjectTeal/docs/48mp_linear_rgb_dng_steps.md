@@ -4,7 +4,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 
 ## 0. Environment & Repo Scaffolding
 - [x] Add Swift Package Manager dependencies (e.g., RxSwift) and shared utilities target.
-- [ ] Standardize lint/format settings and CI tasks.
+- [x] Standardize lint/format settings and CI tasks.
 - [ ] Create a shared `CIContext` service and dependency-injection entry point.
 
 ## 1. Data Ingest & Alignment
