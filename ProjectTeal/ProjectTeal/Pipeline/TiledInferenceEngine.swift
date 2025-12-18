@@ -70,6 +70,40 @@ struct TiledGainFieldConfig {
     }
 }
 
+/// Captures latency and working-set estimates for a tiled inference pass.
+struct TiledInferenceMetrics {
+    let tileCount: Int
+    let tileDurations: [TimeInterval]
+    let gainTileDurations: [TimeInterval]
+    let totalDuration: TimeInterval
+    let accumulatorBytes: Int
+    let gainAccumulatorBytes: Int
+    let maxTileBytes: Int
+    let maxGainTileBytes: Int
+
+    /// Estimated peak memory usage during inference (accumulators + active tiles).
+    var estimatedWorkingSetBytes: Int {
+        let accumulator = max(accumulatorBytes, gainAccumulatorBytes)
+        return accumulator + maxTileBytes + maxGainTileBytes
+    }
+
+    var averageTileDuration: TimeInterval {
+        guard !tileDurations.isEmpty else { return 0 }
+        return tileDurations.reduce(0, +) / Double(tileDurations.count)
+    }
+
+    var averageGainTileDuration: TimeInterval {
+        guard !gainTileDurations.isEmpty else { return 0 }
+        return gainTileDurations.reduce(0, +) / Double(gainTileDurations.count)
+    }
+}
+
+/// Bundles the stitched image with its performance metrics.
+struct TiledInferenceResult {
+    let image: RGBImage
+    let metrics: TiledInferenceMetrics
+}
+
 /// Public-facing tile context surfaced to the tile processor.
 struct TiledTileContext {
     let originX: Int
@@ -117,6 +151,13 @@ struct TiledInferenceEngine {
     func process(image: RGBImage,
                  config: TiledInferenceConfig = TiledInferenceConfig(),
                  tileProcessor: (RGBImage, TiledTileContext) -> RGBImage) -> RGBImage {
+        processWithMetrics(image: image, config: config, tileProcessor: tileProcessor).image
+    }
+
+    /// Processes an RGB image and returns performance metrics for latency/memory budgeting.
+    func processWithMetrics(image: RGBImage,
+                            config: TiledInferenceConfig = TiledInferenceConfig(),
+                            tileProcessor: (RGBImage, TiledTileContext) -> RGBImage) -> TiledInferenceResult {
         let placements = makePlacements(imageWidth: image.width,
                                         imageHeight: image.height,
                                         config: config)
@@ -124,9 +165,22 @@ struct TiledInferenceEngine {
         var accumPixels = [SIMD3<Float>](repeating: .zero, count: image.width * image.height)
         var accumWeights = [Float](repeating: 0, count: image.width * image.height)
 
+        var tileDurations: [TimeInterval] = []
+        tileDurations.reserveCapacity(placements.count)
+
+        var maxTileBytes = 0
+        let accumulatorBytes = estimatedAccumulatorBytes(width: image.width, height: image.height)
+        let startTime = CFAbsoluteTimeGetCurrent()
+
         for placement in placements {
+            maxTileBytes = max(maxTileBytes, estimatedTileBytes(width: placement.context.width, height: placement.context.height))
+
             let crop = crop(image: image, placement: placement)
+            let tileStart = CFAbsoluteTimeGetCurrent()
             let processed = tileProcessor(crop, placement.context)
+            let tileEnd = CFAbsoluteTimeGetCurrent()
+            tileDurations.append(tileEnd - tileStart)
+
             precondition(processed.width == placement.context.width && processed.height == placement.context.height,
                          "Tile processor must not change tile dimensions")
 
@@ -150,7 +204,18 @@ struct TiledInferenceEngine {
             }
         }
 
-        return RGBImage(width: image.width, height: image.height, pixels: outputPixels)
+        let totalDuration = CFAbsoluteTimeGetCurrent() - startTime
+        let metrics = TiledInferenceMetrics(tileCount: placements.count,
+                                            tileDurations: tileDurations,
+                                            gainTileDurations: [],
+                                            totalDuration: totalDuration,
+                                            accumulatorBytes: accumulatorBytes,
+                                            gainAccumulatorBytes: 0,
+                                            maxTileBytes: maxTileBytes,
+                                            maxGainTileBytes: 0)
+
+        return TiledInferenceResult(image: RGBImage(width: image.width, height: image.height, pixels: outputPixels),
+                                    metrics: metrics)
     }
 
     /// Processes an RGB image with an auxiliary low-resolution gain-field pass.
@@ -166,11 +231,24 @@ struct TiledInferenceEngine {
                               gainConfig: TiledGainFieldConfig = TiledGainFieldConfig(),
                               gainProcessor: (RGBImage, TiledTileContext) -> RGBImage,
                               tileProcessor: (RGBImage, TiledTileContext, GainFieldTile) -> RGBImage) -> RGBImage {
+        processWithGainFieldAndMetrics(image: image,
+                                       config: config,
+                                       gainConfig: gainConfig,
+                                       gainProcessor: gainProcessor,
+                                       tileProcessor: tileProcessor).image
+    }
+
+    /// Processes an RGB image with a low-resolution gain-field pass and collects performance metrics.
+    func processWithGainFieldAndMetrics(image: RGBImage,
+                                        config: TiledInferenceConfig = TiledInferenceConfig(),
+                                        gainConfig: TiledGainFieldConfig = TiledGainFieldConfig(),
+                                        gainProcessor: (RGBImage, TiledTileContext) -> RGBImage,
+                                        tileProcessor: (RGBImage, TiledTileContext, GainFieldTile) -> RGBImage) -> TiledInferenceResult {
         let lowResImage = downsample(image: image, factor: gainConfig.downsample)
-        let lowResGain = process(image: lowResImage,
-                                 config: gainConfig.tiling,
-                                 tileProcessor: gainProcessor)
-        let fullResGain = upsampleNearest(image: lowResGain,
+        let lowResResult = processWithMetrics(image: lowResImage,
+                                              config: gainConfig.tiling,
+                                              tileProcessor: gainProcessor)
+        let fullResGain = upsampleNearest(image: lowResResult.image,
                                           factor: gainConfig.downsample,
                                           targetWidth: image.width,
                                           targetHeight: image.height)
@@ -182,11 +260,29 @@ struct TiledInferenceEngine {
         var accumPixels = [SIMD3<Float>](repeating: .zero, count: image.width * image.height)
         var accumWeights = [Float](repeating: 0, count: image.width * image.height)
 
+        var tileDurations: [TimeInterval] = []
+        tileDurations.reserveCapacity(placements.count)
+
+        var maxTileBytes = 0
+        var maxGainTileBytes = max(lowResResult.metrics.maxTileBytes, 0)
+
+        let accumulatorBytes = estimatedAccumulatorBytes(width: image.width, height: image.height)
+        let startTime = CFAbsoluteTimeGetCurrent()
+
         for placement in placements {
+            let tileBytes = estimatedTileBytes(width: placement.context.width, height: placement.context.height)
+            maxTileBytes = max(maxTileBytes, tileBytes)
+            maxGainTileBytes = max(maxGainTileBytes, tileBytes)
+
             let crop = crop(image: image, placement: placement)
             let gainCrop = crop(image: fullResGain, placement: placement)
             let gainTile = GainFieldTile(width: gainCrop.width, height: gainCrop.height, pixels: gainCrop.pixels)
+
+            let tileStart = CFAbsoluteTimeGetCurrent()
             let processed = tileProcessor(crop, placement.context, gainTile)
+            let tileEnd = CFAbsoluteTimeGetCurrent()
+            tileDurations.append(tileEnd - tileStart)
+
             precondition(processed.width == placement.context.width && processed.height == placement.context.height,
                          "Tile processor must not change tile dimensions")
 
@@ -210,7 +306,18 @@ struct TiledInferenceEngine {
             }
         }
 
-        return RGBImage(width: image.width, height: image.height, pixels: outputPixels)
+        let totalDuration = (CFAbsoluteTimeGetCurrent() - startTime) + lowResResult.metrics.totalDuration
+        let metrics = TiledInferenceMetrics(tileCount: placements.count,
+                                            tileDurations: tileDurations,
+                                            gainTileDurations: lowResResult.metrics.tileDurations,
+                                            totalDuration: totalDuration,
+                                            accumulatorBytes: accumulatorBytes,
+                                            gainAccumulatorBytes: lowResResult.metrics.accumulatorBytes,
+                                            maxTileBytes: maxTileBytes,
+                                            maxGainTileBytes: maxGainTileBytes)
+
+        return TiledInferenceResult(image: RGBImage(width: image.width, height: image.height, pixels: outputPixels),
+                                    metrics: metrics)
     }
 }
 
@@ -321,6 +428,16 @@ private extension TiledInferenceEngine {
             }
         }
         return RGBImage(width: placement.context.width, height: placement.context.height, pixels: pixels)
+    }
+
+    func estimatedTileBytes(width: Int, height: Int) -> Int {
+        width * height * MemoryLayout<SIMD3<Float>>.stride
+    }
+
+    func estimatedAccumulatorBytes(width: Int, height: Int) -> Int {
+        let pixelBytes = width * height * MemoryLayout<SIMD3<Float>>.stride
+        let weightBytes = width * height * MemoryLayout<Float>.stride
+        return pixelBytes + weightBytes
     }
 
     func blend(processed: RGBImage,

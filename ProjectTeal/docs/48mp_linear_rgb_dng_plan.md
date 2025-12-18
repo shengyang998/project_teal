@@ -45,6 +45,7 @@ Deliverables include preprocessing, trainable model + training code, iOS inferen
 - Gain-field context: generate a low-res gain map with its own tiling/blending pass, then upsample and feed it into the high-res tiles for consistent exposure mapping.
 - Core ML: use supported ops, FP16 weights; consider INT8 after visual sign-off.
   - FP16-first executor wraps model loading, MLMultiArray input/output, and bilinear gain upsampling for tiled inference; INT8 toggled only after qualitative gates.
+  - Perf instrumentation: tile-level latency sampling and working-set estimation to validate 48MP device budgets.
 - Deliver on-device pipeline processing 48MP within latency/memory budget.
 
 ## Phase 7 — Write 48MP Linear RGB DNG
