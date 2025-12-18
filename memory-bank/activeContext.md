@@ -30,7 +30,6 @@
 - Implemented Baseline A as a global de-LTM gain alignment path that inverts an optional tone curve, forward-projects into RAW space, and applies a percentile gain to match anchor exposure.
 
 ### Next Steps
-- Implement Baseline B (gain-field only) for risk mitigation.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths and the gain-field path.
 
 ### Resolved Decisions
