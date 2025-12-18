@@ -42,7 +42,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Ensure latency/memory targets for 48MP capture with tile-level timing and working-set estimation hooks.
 
 ## 7. 48MP Linear RGB DNG Writer
-- [ ] Emit 3-channel linear image (tiled, optional lossless compression), SamplesPerPixel=3 (no CFA tags).
+- [x] Emit 3-channel linear image (tiled, optional lossless compression), SamplesPerPixel=3 (no CFA tags).
 - [ ] Write metadata: color matrices/ICC, AsShotNeutral/WB, baseline exposure/black level matching normalization.
 - [ ] Compatibility validation in Lightroom/ACR, Apple Photos/Preview, and an open-source reader.
 

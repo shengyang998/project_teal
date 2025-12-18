@@ -22,6 +22,7 @@
 - Low-res gain-field pass that downsamples, tiles, blends, upsamples, and injects gains into the high-res tiles with unit validation.
 - Core ML gain-field executor that loads FP16-first models, converts MLMultiArray I/O, upsamples gain with bilinear sampling, and composes linear predictions; INT8 kept as a deliberate follow-up.
 - Tile-level latency sampling and working-set estimation for tiled inference with metrics returned alongside stitched outputs.
+- Linear DNG writer that strips CFA tags, forces 3-channel SamplesPerPixel=3 output, and supports tiling plus optional lossless JPEG compression with unit coverage for metadata shaping.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -30,7 +31,7 @@
 - Filter pipeline engine and custom filter scaffolding.
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
-- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (linear DNG writer, baselines).
+- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (metadata fidelity/compatibility plus baselines).
 - Evaluation harness reporting layer: qualitative coverage is curated and metrics exist; extend reporting outputs into the on-device pipeline.
 
 ### Current status

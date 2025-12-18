@@ -52,4 +52,41 @@ struct ProjectTealTests {
         #expect(abs(normalization.normalize(value: 2048) - 0.5) < 1e-6)
         #expect(normalization.normalize(value: 5000) == 1)
     }
+
+    @Test func stripsCFAMetadataAndAddsLinearFlags() {
+        let writer = LinearDNGWriter()
+        let metadata: [CFString: Any] = [
+            kCGImagePropertyDNGDictionary: [
+                kCGImagePropertyDNGCFAPattern: [0, 1, 1, 2],
+                kCGImagePropertyDNGCFARepeatPatternDim: [2, 2]
+            ],
+            kCGImagePropertyTIFFDictionary: [
+                kCGImagePropertyTIFFSamplesPerPixel: 1
+            ]
+        ]
+
+        let properties = writer.makeDestinationProperties(metadata: metadata,
+                                                          options: .init(tileSize: 512, compression: .losslessJPEG))
+
+        let dng = properties[kCGImagePropertyDNGDictionary] as? [CFString: Any]
+        #expect(dng?[kCGImagePropertyDNGCFAPattern] == nil)
+        #expect(dng?[kCGImagePropertyDNGCFARepeatPatternDim] == nil)
+        #expect(dng?[kCGImagePropertyDNGIsLinearRaw] as? Bool == true)
+
+        let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
+        #expect(tiff?[kCGImagePropertyTIFFSamplesPerPixel] as? Int == 3)
+        #expect(tiff?[kCGImagePropertyTIFFCompression] as? Int == LinearDNGWriter.Options.Compression.losslessJPEG.tiffValue)
+        #expect(tiff?[kCGImagePropertyTIFFTileWidth] as? Int == 512)
+        #expect(tiff?[kCGImagePropertyTIFFTileLength] as? Int == 512)
+    }
+
+    @Test func removesTileHintsWhenUnset() {
+        let writer = LinearDNGWriter()
+        let properties = writer.makeDestinationProperties(metadata: nil, options: .init())
+
+        let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
+        #expect(tiff?[kCGImagePropertyTIFFTileWidth] == nil)
+        #expect(tiff?[kCGImagePropertyTIFFTileLength] == nil)
+        #expect(tiff?[kCGImagePropertyTIFFSamplesPerPixel] as? Int == 3)
+    }
 }
