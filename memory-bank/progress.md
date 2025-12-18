@@ -24,6 +24,7 @@
 - Tile-level latency sampling and working-set estimation for tiled inference with metrics returned alongside stitched outputs.
 - Linear DNG writer that strips CFA tags, forces 3-channel SamplesPerPixel=3 output, and supports tiling plus optional lossless JPEG compression with unit coverage for metadata shaping.
 - DNG writer metadata path that carries normalization (black/white level, AsShotNeutral) into output and injects a linear sRGB ICC profile when color matrices are absent.
+- Compatibility guardrails for the linear DNG writer: fallback color matrices/illuminants, baseline exposure defaults, and a validator that asserts linearity, color transforms, SamplesPerPixel=3, and ICC presence.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -32,7 +33,7 @@
 - Filter pipeline engine and custom filter scaffolding.
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
-- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (metadata fidelity/compatibility plus baselines).
+- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (baseline models and early risk checks).
 - Evaluation harness reporting layer: qualitative coverage is curated and metrics exist; extend reporting outputs into the on-device pipeline.
 
 ### Current status

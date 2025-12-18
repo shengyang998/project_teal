@@ -12,6 +12,18 @@ import CoreGraphics
 import simd
 
 struct LinearDNGWriter {
+    private static let linearSRGBToXYZ: [Double] = [
+        0.4124564, 0.3575761, 0.1804375,
+        0.2126729, 0.7151522, 0.0721750,
+        0.0193339, 0.1191920, 0.9503041
+    ]
+
+    static let identity3x3: [Double] = [
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    ]
+
     struct Options {
         enum Compression {
             case none
@@ -96,12 +108,8 @@ struct LinearDNGWriter {
         cfaKeys.forEach { dng.removeValue(forKey: $0) }
         dng[kCGImagePropertyDNGIsLinearRaw] = true
 
-        if let normalization {
-            dng[kCGImagePropertyDNGBlackLevel] = Array(repeating: 0.0, count: 3)
-            dng[kCGImagePropertyDNGWhiteLevel] = 1.0
-            dng[kCGImagePropertyDNGAsShotNeutral] = Self.makeAsShotNeutral(from: normalization.whiteBalanceGains)
-            dng[kCGImagePropertyDNGBaselineExposure] = 0.0
-        }
+        populateNormalizationMetadata(into: &dng, normalization: normalization)
+        populateColorMetadata(into: &dng)
 
         properties[kCGImagePropertyDNGDictionary] = dng
 
@@ -137,5 +145,52 @@ struct LinearDNGWriter {
             1.0 / gains.y,
             1.0 / gains.z
         ]
+    }
+
+    private static func populateNormalizationMetadata(into dng: inout [CFString: Any],
+                                                      normalization: RAW12Parser.Normalization?) {
+        if let normalization {
+            dng[kCGImagePropertyDNGBlackLevel] = Array(repeating: 0.0, count: 3)
+            dng[kCGImagePropertyDNGWhiteLevel] = 1.0
+            dng[kCGImagePropertyDNGAsShotNeutral] = Self.makeAsShotNeutral(from: normalization.whiteBalanceGains)
+            dng[kCGImagePropertyDNGBaselineExposure] = 0.0
+        } else {
+            if dng[kCGImagePropertyDNGBlackLevel] == nil {
+                dng[kCGImagePropertyDNGBlackLevel] = Array(repeating: 0.0, count: 3)
+            }
+            if dng[kCGImagePropertyDNGWhiteLevel] == nil {
+                dng[kCGImagePropertyDNGWhiteLevel] = 1.0
+            }
+            if dng[kCGImagePropertyDNGAsShotNeutral] == nil {
+                dng[kCGImagePropertyDNGAsShotNeutral] = [1.0, 1.0, 1.0]
+            }
+            if dng[kCGImagePropertyDNGBaselineExposure] == nil {
+                dng[kCGImagePropertyDNGBaselineExposure] = 0.0
+            }
+        }
+    }
+
+    private static func populateColorMetadata(into dng: inout [CFString: Any]) {
+        if dng[kCGImagePropertyDNGColorMatrix1] == nil {
+            dng[kCGImagePropertyDNGColorMatrix1] = linearSRGBToXYZ
+        }
+        if dng[kCGImagePropertyDNGColorMatrix2] == nil {
+            dng[kCGImagePropertyDNGColorMatrix2] = linearSRGBToXYZ
+        }
+        if dng[kCGImagePropertyDNGCameraCalibration1] == nil {
+            dng[kCGImagePropertyDNGCameraCalibration1] = identity3x3
+        }
+        if dng[kCGImagePropertyDNGCameraCalibration2] == nil {
+            dng[kCGImagePropertyDNGCameraCalibration2] = identity3x3
+        }
+        if dng[kCGImagePropertyDNGAsShotNeutral] == nil {
+            dng[kCGImagePropertyDNGAsShotNeutral] = [1.0, 1.0, 1.0]
+        }
+        if dng[kCGImagePropertyDNGCalibrationIlluminant1] == nil {
+            dng[kCGImagePropertyDNGCalibrationIlluminant1] = 21 // D65
+        }
+        if dng[kCGImagePropertyDNGCalibrationIlluminant2] == nil {
+            dng[kCGImagePropertyDNGCalibrationIlluminant2] = 21 // D65
+        }
     }
 }

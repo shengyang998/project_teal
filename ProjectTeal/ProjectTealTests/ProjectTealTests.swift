@@ -125,4 +125,62 @@ struct ProjectTealTests {
         #expect(!iccProfile.isEmpty)
         #expect(properties[kCGImagePropertyProfileName] as? String == "Linear sRGB")
     }
+
+    @Test func fillsColorMetadataFallbacks() throws {
+        let writer = LinearDNGWriter()
+        let normalization = RAW12Parser.Normalization(blackLevel: 0,
+                                                      whiteLevel: 1,
+                                                      whiteBalanceGains: SIMD3(1.5, 1.0, 0.9))
+
+        let properties = writer.makeDestinationProperties(metadata: nil,
+                                                          normalization: normalization,
+                                                          options: .init())
+
+        let dng = try #require(properties[kCGImagePropertyDNGDictionary] as? [CFString: Any])
+        let colorMatrix = try #require(dng[kCGImagePropertyDNGColorMatrix1] as? [Double])
+        #expect(colorMatrix.count == 9)
+        #expect(dng[kCGImagePropertyDNGCameraCalibration1] as? [Double] == LinearDNGWriter.identity3x3)
+        #expect(dng[kCGImagePropertyDNGCalibrationIlluminant1] as? Int == 21)
+        #expect(dng[kCGImagePropertyDNGAsShotNeutral] as? [Double] != nil)
+    }
+
+    @Test func validatesWrittenDNGCompatibility() throws {
+        let writer = LinearDNGWriter()
+        let normalization = RAW12Parser.Normalization(blackLevel: 64,
+                                                      whiteLevel: 4095,
+                                                      whiteBalanceGains: SIMD3(2.0, 1.0, 1.25))
+        let cgImage = try #require(Self.makeTestImage(width: 8, height: 8))
+        let destination = FileManager.default.temporaryDirectory.appendingPathComponent("compat-")
+            .appendingPathExtension("dng")
+
+        _ = try writer.write(cgImage: cgImage,
+                              metadata: nil,
+                              normalization: normalization,
+                              destinationURL: destination,
+                              options: .init(tileSize: 64, compression: .losslessJPEG))
+
+        let validator = DNGCompatibilityValidator()
+        let result = try validator.validate(url: destination)
+
+        #expect(result.isLinear)
+        #expect(result.samplesPerPixel == 3)
+        #expect(result.hasColorTransforms)
+        #expect(result.hasAsShotNeutral)
+        #expect(result.hasICCProfile)
+    }
+
+    private static func makeTestImage(width: Int, height: Int) -> CGImage? {
+        guard let context = CGContext(data: nil,
+                                      width: width,
+                                      height: height,
+                                      bitsPerComponent: 16,
+                                      bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.linearSRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue | CGBitmapInfo.byteOrder16Little.rawValue) else {
+            return nil
+        }
+        context.setFillColor(CGColor(red: 0.25, green: 0.5, blue: 0.75, alpha: 1.0))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        return context.makeImage()
+    }
 }
