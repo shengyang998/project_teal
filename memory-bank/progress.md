@@ -23,6 +23,7 @@
 - Core ML gain-field executor that loads FP16-first models, converts MLMultiArray I/O, upsamples gain with bilinear sampling, and composes linear predictions; INT8 kept as a deliberate follow-up.
 - Tile-level latency sampling and working-set estimation for tiled inference with metrics returned alongside stitched outputs.
 - Linear DNG writer that strips CFA tags, forces 3-channel SamplesPerPixel=3 output, and supports tiling plus optional lossless JPEG compression with unit coverage for metadata shaping.
+- DNG writer metadata path that carries normalization (black/white level, AsShotNeutral) into output and injects a linear sRGB ICC profile when color matrices are absent.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
