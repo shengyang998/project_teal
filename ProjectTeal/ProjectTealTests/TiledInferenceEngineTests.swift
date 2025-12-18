@@ -129,6 +129,41 @@ struct TiledInferenceEngineTests {
             }
         }
     }
+
+    @Test func surfacesLatencyAndMemoryMetrics() throws {
+        // Validate that metrics track both the low-res gain tiles and the high-res tiles.
+        let width = 8
+        let height = 8
+        let image = RGBImage(width: width,
+                             height: height,
+                             pixels: [SIMD3<Float>](repeating: SIMD3<Float>(repeating: 1), count: width * height))
+
+        let engine = TiledInferenceEngine()
+        let result = engine.processWithGainFieldAndMetrics(image: image,
+                                                           config: TiledInferenceConfig(tileSize: 4, overlap: 1, blendProfile: .cosine),
+                                                           gainConfig: TiledGainFieldConfig(downsample: 2,
+                                                                                            tiling: TiledInferenceConfig(tileSize: 3,
+                                                                                                                        overlap: 1,
+                                                                                                                        blendProfile: .linear)),
+                                                           gainProcessor: { tile, _ in tile },
+                                                           tileProcessor: { tile, _, gainTile in
+                                                               var pixels = [SIMD3<Float>]()
+                                                               pixels.reserveCapacity(tile.width * tile.height)
+                                                               for index in 0 ..< tile.pixels.count {
+                                                                   pixels.append(tile.pixels[index] * gainTile.pixels[index])
+                                                               }
+                                                               return RGBImage(width: tile.width, height: tile.height, pixels: pixels)
+                                                           })
+
+        let metrics = result.metrics
+        #expect(metrics.tileCount == 9) // 3x3 high-res tiles with overlap stride
+        #expect(metrics.gainTileDurations.count == 4) // 2x2 low-res gain tiles
+        #expect(metrics.accumulatorBytes > 0)
+        #expect(metrics.maxTileBytes > 0)
+        #expect(metrics.maxGainTileBytes >= metrics.maxTileBytes)
+        #expect(metrics.estimatedWorkingSetBytes >= metrics.accumulatorBytes + metrics.maxTileBytes)
+        #expect(metrics.totalDuration >= 0)
+    }
 }
 
 private extension SIMD3 where Scalar == Float {

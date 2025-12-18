@@ -39,7 +39,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Tiled inference (512–1024 px tiles, 32–64 px overlap) with cosine/linear blending.
 - [x] Low-res gain field over larger context; stitch into full-res output.
 - [x] Core ML integration with supported ops and FP16 weights; evaluate INT8 after visual sign-off.
-- [ ] Ensure latency/memory targets for 48MP capture.
+- [x] Ensure latency/memory targets for 48MP capture with tile-level timing and working-set estimation hooks.
 
 ## 7. 48MP Linear RGB DNG Writer
 - [ ] Emit 3-channel linear image (tiled, optional lossless compression), SamplesPerPixel=3 (no CFA tags).
