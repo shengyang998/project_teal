@@ -38,7 +38,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 ## 6. iOS Inference Pipeline
 - [x] Tiled inference (512–1024 px tiles, 32–64 px overlap) with cosine/linear blending.
 - [x] Low-res gain field over larger context; stitch into full-res output.
-- [ ] Core ML integration with supported ops and FP16 weights; evaluate INT8 after visual sign-off.
+- [x] Core ML integration with supported ops and FP16 weights; evaluate INT8 after visual sign-off.
 - [ ] Ensure latency/memory targets for 48MP capture.
 
 ## 7. 48MP Linear RGB DNG Writer

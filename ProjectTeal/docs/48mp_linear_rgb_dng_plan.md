@@ -44,6 +44,7 @@ Deliverables include preprocessing, trainable model + training code, iOS inferen
 - Tiling: 512–1024 px tiles with 32–64 px overlap; blend with cosine/linear weights; run gain field at low-res over larger context if possible.
 - Gain-field context: generate a low-res gain map with its own tiling/blending pass, then upsample and feed it into the high-res tiles for consistent exposure mapping.
 - Core ML: use supported ops, FP16 weights; consider INT8 after visual sign-off.
+  - FP16-first executor wraps model loading, MLMultiArray input/output, and bilinear gain upsampling for tiled inference; INT8 toggled only after qualitative gates.
 - Deliver on-device pipeline processing 48MP within latency/memory budget.
 
 ## Phase 7 — Write 48MP Linear RGB DNG

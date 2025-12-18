@@ -23,9 +23,10 @@
 - Built a reporting helper that compares candidate metrics against a global inverse tone-curve baseline, aggregates deltas, and surfaces qualitative tag coverage; marked the evaluation-reporting step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Implemented a tiled inference prototype with configurable tile sizes/overlaps, cosine/linear blending, and unit tests to verify stitching without seams; marked the tiled-inference step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Added a low-res gain-field tiling pass with downsampled blending, upsampling, and high-res gain injection plus unit tests; marked the gain-field context step complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Wrapped the gain-field Core ML model with an FP16-first executor that converts MLMultiArray I/O, upsamples the gain map with bilinear sampling, and composes linear predictions; marked the Core ML integration step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
-- Hook up Core ML integration (FP16-first, INT8 after visual sign-off) for the tiled pipeline.
+- Validate tiled Core ML inference against 48MP latency/memory targets and surface perf/debug instrumentation.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths and the gain-field path.
 
 ### Resolved Decisions
