@@ -58,6 +58,10 @@ Deliverables include preprocessing, trainable model + training code, iOS inferen
 - Baseline B: gain-field-only model to quickly remove LTM.
 - Key risks: misalignment, incorrect quad/binner logic, WB ambiguity—address early with tests and standardized metadata.
 
+Baseline A now exists as a global gain alignment path that inverts any provided
+tone curve, projects into the RAW anchor via the forward operator, and applies a
+robust percentile gain to match exposure without spatial variation.
+
 ## Recommended Execution Order
 1. Finish alignment and correct forward operator (Phases 1–2).
 2. Train gain-only model with anchor loss + mild regularization.

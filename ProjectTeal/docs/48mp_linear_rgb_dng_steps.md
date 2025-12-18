@@ -47,7 +47,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Compatibility validation in Lightroom/ACR, Apple Photos/Preview, and an open-source reader.
 
 ## 8. Baselines & Risk Mitigation
-- [ ] Implement Baseline A: global de-LTM mapping from ProRAW48 to RAW12-guided linear exposure.
+- [x] Implement Baseline A: global de-LTM mapping from ProRAW48 to RAW12-guided linear exposure.
 - [ ] Implement Baseline B: gain-field-only model for quick LTM removal.
 - [ ] Add early tests for misalignment, quad/binner correctness, and WB consistency.
 

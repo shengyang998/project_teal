@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
-__all__ = ["evaluation", "losses", "models", "qualitative", "reporting"]
+__all__ = ["baselines", "evaluation", "losses", "models", "qualitative", "reporting"]
 
 
 def __getattr__(name: str) -> Any:  # pragma: no cover - thin lazy loader
@@ -15,4 +15,4 @@ def __getattr__(name: str) -> Any:  # pragma: no cover - thin lazy loader
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from . import evaluation, losses, models, qualitative, reporting  # noqa: F401
+    from . import baselines, evaluation, losses, models, qualitative, reporting  # noqa: F401
