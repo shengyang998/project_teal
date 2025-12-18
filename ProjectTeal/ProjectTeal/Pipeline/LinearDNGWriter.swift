@@ -9,6 +9,7 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 import CoreGraphics
+import simd
 
 struct LinearDNGWriter {
     struct Options {
@@ -49,10 +50,12 @@ struct LinearDNGWriter {
     /// - Parameters:
     ///   - cgImage: Linear RGB image to embed.
     ///   - metadata: Image metadata dictionary, typically from RAW source.
+    ///   - normalization: Black level/white level/WB gains used to produce the linearized image.
     ///   - destinationURL: URL to write the DNG file.
     ///   - options: Writer configuration for tiling/compression.
     func write(cgImage: CGImage,
                metadata: [CFString: Any]?,
+               normalization: RAW12Parser.Normalization? = nil,
                destinationURL: URL,
                options: Options = Options()) throws -> Output {
         guard let destination = CGImageDestinationCreateWithURL(destinationURL as CFURL,
@@ -62,7 +65,9 @@ struct LinearDNGWriter {
             throw Error.cannotCreateDestination
         }
 
-        let properties = makeDestinationProperties(metadata: metadata, options: options) as CFDictionary?
+        let properties = makeDestinationProperties(metadata: metadata,
+                                                  normalization: normalization,
+                                                  options: options) as CFDictionary?
         CGImageDestinationAddImage(destination, cgImage, properties)
 
         guard CGImageDestinationFinalize(destination) else {
@@ -76,7 +81,9 @@ struct LinearDNGWriter {
 
     /// Builds a sanitized metadata dictionary for a 3-channel linear RGB DNG.
     /// Exposed internally for testing.
-    func makeDestinationProperties(metadata: [CFString: Any]?, options: Options) -> [CFString: Any] {
+    func makeDestinationProperties(metadata: [CFString: Any]?,
+                                   normalization: RAW12Parser.Normalization? = nil,
+                                   options: Options) -> [CFString: Any] {
         var properties = metadata ?? [:]
 
         var dng = (properties[kCGImagePropertyDNGDictionary] as? [CFString: Any]) ?? [:]
@@ -88,6 +95,14 @@ struct LinearDNGWriter {
         ]
         cfaKeys.forEach { dng.removeValue(forKey: $0) }
         dng[kCGImagePropertyDNGIsLinearRaw] = true
+
+        if let normalization {
+            dng[kCGImagePropertyDNGBlackLevel] = Array(repeating: 0.0, count: 3)
+            dng[kCGImagePropertyDNGWhiteLevel] = 1.0
+            dng[kCGImagePropertyDNGAsShotNeutral] = Self.makeAsShotNeutral(from: normalization.whiteBalanceGains)
+            dng[kCGImagePropertyDNGBaselineExposure] = 0.0
+        }
+
         properties[kCGImagePropertyDNGDictionary] = dng
 
         var tiff = (properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]) ?? [:]
@@ -103,6 +118,24 @@ struct LinearDNGWriter {
         }
 
         properties[kCGImagePropertyTIFFDictionary] = tiff
+
+        if properties[kCGImagePropertyColorModel] == nil {
+            properties[kCGImagePropertyColorModel] = kCGImagePropertyColorModelRGB
+        }
+
+        if properties[kCGImagePropertyICCProfile] == nil,
+           let iccData = CGColorSpace(name: CGColorSpace.linearSRGB)?.copyICCData() as Data? {
+            properties[kCGImagePropertyICCProfile] = iccData
+            properties[kCGImagePropertyProfileName] = "Linear sRGB"
+        }
         return properties
+    }
+
+    private static func makeAsShotNeutral(from gains: SIMD3<Double>) -> [Double] {
+        [
+            1.0 / gains.x,
+            1.0 / gains.y,
+            1.0 / gains.z
+        ]
     }
 }

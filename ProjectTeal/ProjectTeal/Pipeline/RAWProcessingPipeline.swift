@@ -81,6 +81,7 @@ final class RAWProcessingPipeline {
         do {
             let dngOutput = try dngWriter.write(cgImage: cgImage,
                                                 metadata: CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
+                                                normalization: parsed.normalization,
                                                 destinationURL: outputURL,
                                                 options: writerOptions)
             return .success(Result(dng: dngOutput, metadata: metadata, rawParsing: parsed))

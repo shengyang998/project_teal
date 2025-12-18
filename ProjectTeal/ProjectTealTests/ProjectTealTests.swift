@@ -89,4 +89,40 @@ struct ProjectTealTests {
         #expect(tiff?[kCGImagePropertyTIFFTileLength] == nil)
         #expect(tiff?[kCGImagePropertyTIFFSamplesPerPixel] as? Int == 3)
     }
+
+    @Test func carriesNormalizationIntoMetadata() throws {
+        let writer = LinearDNGWriter()
+        let normalization = RAW12Parser.Normalization(blackLevel: 64,
+                                                      whiteLevel: 4095,
+                                                      whiteBalanceGains: SIMD3(2.0, 1.0, 1.5))
+
+        let properties = writer.makeDestinationProperties(metadata: [
+            kCGImagePropertyDNGDictionary: [
+                kCGImagePropertyDNGColorMatrix1: [1.0, 0.0, 0.0,
+                                                   0.0, 1.0, 0.0,
+                                                   0.0, 0.0, 1.0]
+            ]
+        ], normalization: normalization, options: .init())
+
+        let dng = try #require(properties[kCGImagePropertyDNGDictionary] as? [CFString: Any])
+        #expect(dng[kCGImagePropertyDNGBlackLevel] as? [Double] == [0.0, 0.0, 0.0])
+        #expect(dng[kCGImagePropertyDNGWhiteLevel] as? Double == 1.0)
+        #expect(dng[kCGImagePropertyDNGBaselineExposure] as? Double == 0.0)
+
+        let asShotNeutral = try #require(dng[kCGImagePropertyDNGAsShotNeutral] as? [Double])
+        #expect(asShotNeutral.count == 3)
+        #expect(abs(asShotNeutral[0] - 0.5) < 1e-6)
+        #expect(abs(asShotNeutral[1] - 1.0) < 1e-6)
+        #expect(abs(asShotNeutral[2] - (2.0 / 3.0)) < 1e-6)
+    }
+
+    @Test func providesFallbackProfileWhenMissing() throws {
+        let writer = LinearDNGWriter()
+        let properties = writer.makeDestinationProperties(metadata: nil, options: .init())
+
+        #expect(properties[kCGImagePropertyColorModel] as? CFString == kCGImagePropertyColorModelRGB)
+        let iccProfile = try #require(properties[kCGImagePropertyICCProfile] as? Data)
+        #expect(!iccProfile.isEmpty)
+        #expect(properties[kCGImagePropertyProfileName] as? String == "Linear sRGB")
+    }
 }
