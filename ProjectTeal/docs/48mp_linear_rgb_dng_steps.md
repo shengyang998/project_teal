@@ -33,7 +33,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 ## 5. Evaluation Harness
 - [x] Metrics: PSNR/SSIM on RAW12 mosaic, per-CFA error histograms, gradient correlation/halo indicators post global rendering.
 - [x] Curate qualitative set (backlit, mixed light, bright windows, city lights, foliage, fine patterns).
-- [ ] Implement report generator comparing to global inverse tone-curve baseline.
+- [x] Implement report generator comparing to global inverse tone-curve baseline.
 
 ## 6. iOS Inference Pipeline
 - [ ] Tiled inference (512–1024 px tiles, 32–64 px overlap) with cosine/linear blending.
