@@ -29,9 +29,10 @@
 - Added fallback color metadata (linear sRGB color matrices, calibration illuminants, WB) to the linear DNG writer and introduced a compatibility validator that checks linearity, SamplesPerPixel=3, color transforms, and ICC presence.
 - Implemented Baseline A as a global de-LTM gain alignment path that inverts an optional tone curve, forward-projects into RAW space, and applies a percentile gain to match anchor exposure.
 - Added misalignment/WB/binner risk checks with unit tests plus diagnostics that surface shifts, manual binner residuals, and AsShotNeutral consistency; marked the remaining Baselines & Risk Mitigation step complete.
+- Added CI-facing analysis helpers that reuse the forward operator, channel scaling, and gain-field visualization to keep histograms/side-by-sides aligned with RAW ingest and the gain-field path.
 
 ### Next Steps
-- Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths and the gain-field path.
+- Begin wiring the iOS RAW ingest/baseline render path with Apple's APIs so on-device outputs track the Python/GainField pipelines.
 
 ### Resolved Decisions
 - **iOS Deployment Target**: iOS 18+ (minimum)
