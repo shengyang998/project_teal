@@ -1,0 +1,92 @@
+//
+//  TiledInferenceEngineTests.swift
+//  ProjectTealTests
+//
+//  Validates tile placement, blending, and stitching behavior for the tiled
+//  inference prototype. Ensures coverage, normalization, and seam softening are
+//  stable for 48MP-scale tiling configs.
+//
+
+import Foundation
+@testable import ProjectTeal
+import Testing
+
+struct TiledInferenceEngineTests {
+    @Test func preservesIdentityAcrossTiles() throws {
+        // Create a small synthetic image with distinct per-channel ramps.
+        let width = 8
+        let height = 6
+        var pixels = [SIMD3<Float>]()
+        for y in 0 ..< height {
+            for x in 0 ..< width {
+                let base = Float(y * width + x)
+                pixels.append(SIMD3<Float>(base, base * 0.25, base * 0.5))
+            }
+        }
+        let image = RGBImage(width: width, height: height, pixels: pixels)
+
+        let engine = TiledInferenceEngine()
+        let output = engine.process(image: image,
+                                    config: TiledInferenceConfig(tileSize: 4, overlap: 1, blendProfile: .cosine)) { tile, _ in
+            tile // identity processor
+        }
+
+        #expect(output.width == image.width)
+        #expect(output.height == image.height)
+
+        for index in 0 ..< pixels.count {
+            #expect(output.pixels[index].isApproximatelyEqual(to: pixels[index], tolerance: 1e-4))
+        }
+    }
+
+    @Test func blendsOverlapsWithLinearRamp() throws {
+        // Two horizontal tiles with overlap; tile processors emit constant values
+        // so the overlap should interpolate between them.
+        let width = 8
+        let height = 2
+        let image = RGBImage(width: width,
+                             height: height,
+                             pixels: [SIMD3<Float>](repeating: SIMD3<Float>(repeating: 0), count: width * height))
+
+        let engine = TiledInferenceEngine()
+        let config = TiledInferenceConfig(tileSize: 6, overlap: 2, blendProfile: .linear)
+        let output = engine.process(image: image, config: config) { tile, context in
+            // Encode tile origin into the output so blending is visible.
+            let value: Float = context.originX == 0 ? 0 : 2
+            return RGBImage(width: tile.width,
+                            height: tile.height,
+                            pixels: [SIMD3<Float>](repeating: SIMD3<Float>(repeating: value),
+                                                   count: tile.width * tile.height))
+        }
+
+        // Expected grid: two tiles (0..5) and (2..7) with overlap columns 2..5.
+        // Column 2 should lean to the left tile; column 4 should be an even blend.
+        func outputValue(x: Int) -> Float {
+            let index = x // height is 2 so row 0 is fine
+            return output.pixels[index].x
+        }
+
+        let column2 = outputValue(x: 2)
+        let column4 = outputValue(x: 4)
+        let column6 = outputValue(x: 6)
+
+        #expect(column2 < 1.0) // closer to left tile's 0
+        #expect(column4.isApproximatelyEqual(to: 1.0, tolerance: 0.05)) // blended center
+        #expect(column6 > 1.5) // dominated by right tile's value
+    }
+}
+
+private extension SIMD3 where Scalar == Float {
+    func isApproximatelyEqual(to other: SIMD3<Float>, tolerance: Float) -> Bool {
+        let dx = abs(x - other.x)
+        let dy = abs(y - other.y)
+        let dz = abs(z - other.z)
+        return dx <= tolerance && dy <= tolerance && dz <= tolerance
+    }
+}
+
+private extension Float {
+    func isApproximatelyEqual(to other: Float, tolerance: Float) -> Bool {
+        abs(self - other) <= tolerance
+    }
+}
