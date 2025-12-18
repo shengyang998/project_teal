@@ -2,8 +2,8 @@
 
 ### Current Focus
 - Lock the 48MP linear RGB plan into executable steps with sensor-consistency gates.
-- Stand up the forward operator and synthetic tests that gate training against the 12MP RAW anchor.
-- Land the gain-field/differentiable model scaffolding, losses, and export hooks.
+- Build out evaluation and reporting around the curated qualitative set and quantitative metrics.
+- Maintain alignment between on-device ingest paths and Python analysis utilities.
 
 ### Recent Changes
 - Initialized Git repository and `.gitignore` for Xcode/CMake.
@@ -19,10 +19,11 @@
 - Added a Core ML tracing helper with shape introspection and tests, and marked the export step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Implemented anchor/gradient/gain regularization losses that consume the forward operator output with targeted unit tests and marked step 4 complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Added evaluation metrics for PSNR/SSIM on the RAW mosaic, per-CFA residual histograms, and gradient correlation/halo indicators after global rendering, with unit tests; marked the metrics step complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Curated qualitative evaluation coverage (backlit, mixed light, bright windows, city lights, foliage, fine patterns) with a manifest loader and fixture-backed tests; marked the qualitative-set step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
 - Build tiled inference prototype (no model) to validate device memory/latency envelopes on target hardware.
-- Expand evaluation harness with curated qualitative sweeps and reporting to benchmark RAW-anchor and halo/detail performance.
+- Add evaluation reporting that consumes the curated qualitative set and quantitative metrics for side-by-side regressions.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths.
 
 ### Resolved Decisions

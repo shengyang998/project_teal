@@ -1,4 +1,6 @@
-import torch
+import pytest
+
+torch = pytest.importorskip("torch")
 
 from ProjectTeal.training.losses import (
     anchor_charbonnier_loss,

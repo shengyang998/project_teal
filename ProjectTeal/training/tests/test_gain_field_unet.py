@@ -1,4 +1,6 @@
-import torch
+import pytest
+
+torch = pytest.importorskip("torch")
 
 from ProjectTeal.training.models import GainFieldUNet, GainFieldUNetConfig
 from ProjectTeal.training.models.gain_field_unet import trace_for_coreml
