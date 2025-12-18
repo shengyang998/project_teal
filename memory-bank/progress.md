@@ -27,6 +27,7 @@
 - Compatibility guardrails for the linear DNG writer: fallback color matrices/illuminants, baseline exposure defaults, and a validator that asserts linearity, color transforms, SamplesPerPixel=3, and ICC presence.
 - Baseline A implemented as a global de-LTM gain alignment path using forward-operator projections and percentile gain estimation.
 - Baseline B implemented as a spatial gain-field-only fallback that upsamples and smooths anchor-derived gains to strip local tone mapping without residual prediction.
+- Risk checks for misalignment, quad-binner correctness, and white balance consistency with unit diagnostics for shift detection, manual bin residuals, and neutral estimation.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -35,7 +36,7 @@
 - Filter pipeline engine and custom filter scaffolding.
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
-- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (early risk checks).
+- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (follow-up reporting and on-device hooks).
 - Evaluation harness reporting layer: qualitative coverage is curated and metrics exist; extend reporting outputs into the on-device pipeline.
 
 ### Current status

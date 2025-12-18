@@ -28,6 +28,7 @@
 - Added a linear DNG writer pass that strips CFA tags, enforces SamplesPerPixel=3 RGB layout, and exposes tiling plus lossless JPEG compression options with unit validation; marked the first DNG-writer step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Added fallback color metadata (linear sRGB color matrices, calibration illuminants, WB) to the linear DNG writer and introduced a compatibility validator that checks linearity, SamplesPerPixel=3, color transforms, and ICC presence.
 - Implemented Baseline A as a global de-LTM gain alignment path that inverts an optional tone curve, forward-projects into RAW space, and applies a percentile gain to match anchor exposure.
+- Added misalignment/WB/binner risk checks with unit tests plus diagnostics that surface shifts, manual binner residuals, and AsShotNeutral consistency; marked the remaining Baselines & Risk Mitigation step complete.
 
 ### Next Steps
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths and the gain-field path.

@@ -49,7 +49,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 ## 8. Baselines & Risk Mitigation
 - [x] Implement Baseline A: global de-LTM mapping from ProRAW48 to RAW12-guided linear exposure.
 - [x] Implement Baseline B: gain-field-only model for quick LTM removal.
-- [ ] Add early tests for misalignment, quad/binner correctness, and WB consistency.
+- [x] Add early tests for misalignment, quad/binner correctness, and WB consistency.
 
 ## Acceptance Gates (Definition of Done)
 - Each step includes automated tests or analysis notebooks with documented thresholds.
