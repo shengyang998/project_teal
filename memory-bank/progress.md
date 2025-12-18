@@ -13,6 +13,7 @@
 - Fixture-backed regression test that asserts translation and correlation thresholds for the alignment estimator.
 - Quad-Bayer forward operator that mosaics 48MP RGB into CFA space, 2×2 bins to 12MP, and applies per-channel scaling with synthetic tests for indexing/binning correctness.
 - Two-head PyTorch UNet scaffold for gain-field and detail heads with Core ML export helper stubs and shape tests.
+- Model input/output helpers that upsample RAW12 guidance, concatenate inputs, and compose gain+residual outputs with unit tests.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
