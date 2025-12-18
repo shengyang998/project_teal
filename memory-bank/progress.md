@@ -19,6 +19,7 @@
 - Qualitative manifest loader and fixture-backed coverage for backlit, mixed light, bright windows, city lights, foliage, and fine-pattern scenarios with unit tests.
 - Reporting helper that compares candidate metrics against a global inverse tone-curve baseline and surfaces qualitative tag coverage.
 - Tiled inference prototype with configurable tiles/overlaps, cosine/linear blending, and unit tests to validate stitching and coverage.
+- Low-res gain-field pass that downsamples, tiles, blends, upsamples, and injects gains into the high-res tiles with unit validation.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.

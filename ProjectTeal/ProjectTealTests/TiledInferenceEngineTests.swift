@@ -74,6 +74,61 @@ struct TiledInferenceEngineTests {
         #expect(column4.isApproximatelyEqual(to: 1.0, tolerance: 0.05)) // blended center
         #expect(column6 > 1.5) // dominated by right tile's value
     }
+
+    @Test func stitchesLowResGainFieldIntoHighResTiles() throws {
+        // Build a small image and force tiling on both the gain-field and high-res passes.
+        let width = 6
+        let height = 4
+        let image = RGBImage(width: width,
+                             height: height,
+                             pixels: [SIMD3<Float>](repeating: SIMD3<Float>(repeating: 1), count: width * height))
+
+        let engine = TiledInferenceEngine()
+        let gainDownsample = 2
+        let lowResWidth = Int(ceil(Double(width) / Double(gainDownsample)))
+        let gainConfig = TiledGainFieldConfig(downsample: gainDownsample,
+                                             tiling: TiledInferenceConfig(tileSize: 3, overlap: 1, blendProfile: .linear))
+
+        let output = engine.processWithGainField(image: image,
+                                                 config: TiledInferenceConfig(tileSize: 4, overlap: 1, blendProfile: .cosine),
+                                                 gainConfig: gainConfig,
+                                                 gainProcessor: { _, context in
+                                                     var pixels = [SIMD3<Float>]()
+                                                     for y in 0 ..< context.height {
+                                                         for x in 0 ..< context.width {
+                                                             let globalX = context.originX + x
+                                                             let globalY = context.originY + y
+                                                             let value = Float(globalY * lowResWidth + globalX)
+                                                             pixels.append(SIMD3<Float>(repeating: value))
+                                                         }
+                                                     }
+                                                     return RGBImage(width: context.width, height: context.height, pixels: pixels)
+                                                 },
+                                                 tileProcessor: { tile, _, gainTile in
+                                                     var pixels = [SIMD3<Float>]()
+                                                     for y in 0 ..< tile.height {
+                                                         for x in 0 ..< tile.width {
+                                                             pixels.append(tile[x, y] * gainTile[x, y])
+                                                         }
+                                                     }
+                                                     return RGBImage(width: tile.width, height: tile.height, pixels: pixels)
+                                                 })
+
+        #expect(output.width == width)
+        #expect(output.height == height)
+
+        for y in 0 ..< height {
+            for x in 0 ..< width {
+                let lowX = x / gainDownsample
+                let lowY = y / gainDownsample
+                let expected = Float(lowY * lowResWidth + lowX)
+                let pixel = output[x, y]
+                #expect(pixel.x.isApproximatelyEqual(to: expected, tolerance: 1e-4))
+                #expect(pixel.y.isApproximatelyEqual(to: expected, tolerance: 1e-4))
+                #expect(pixel.z.isApproximatelyEqual(to: expected, tolerance: 1e-4))
+            }
+        }
+    }
 }
 
 private extension SIMD3 where Scalar == Float {

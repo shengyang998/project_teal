@@ -22,10 +22,11 @@
 - Curated qualitative evaluation coverage (backlit, mixed light, bright windows, city lights, foliage, fine patterns) with a manifest loader and fixture-backed tests; marked the qualitative-set step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Built a reporting helper that compares candidate metrics against a global inverse tone-curve baseline, aggregates deltas, and surfaces qualitative tag coverage; marked the evaluation-reporting step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Implemented a tiled inference prototype with configurable tile sizes/overlaps, cosine/linear blending, and unit tests to verify stitching without seams; marked the tiled-inference step complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Added a low-res gain-field tiling pass with downsampled blending, upsampling, and high-res gain injection plus unit tests; marked the gain-field context step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
-- Add low-res gain-field context and stitching to the tiled inference path for the on-device pipeline.
-- Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths.
+- Hook up Core ML integration (FP16-first, INT8 after visual sign-off) for the tiled pipeline.
+- Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths and the gain-field path.
 
 ### Resolved Decisions
 - **iOS Deployment Target**: iOS 18+ (minimum)

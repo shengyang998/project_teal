@@ -42,6 +42,7 @@ Deliverables include preprocessing, trainable model + training code, iOS inferen
 
 ## Phase 6 — iOS Deployment
 - Tiling: 512–1024 px tiles with 32–64 px overlap; blend with cosine/linear weights; run gain field at low-res over larger context if possible.
+- Gain-field context: generate a low-res gain map with its own tiling/blending pass, then upsample and feed it into the high-res tiles for consistent exposure mapping.
 - Core ML: use supported ops, FP16 weights; consider INT8 after visual sign-off.
 - Deliver on-device pipeline processing 48MP within latency/memory budget.
 

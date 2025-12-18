@@ -54,12 +54,46 @@ struct TiledInferenceConfig {
     }
 }
 
+/// Configuration for the low-resolution gain-field pass.
+struct TiledGainFieldConfig {
+    /// Integer downsample factor used to shrink the input before gain prediction.
+    let downsample: Int
+    /// Tile sizing and blending parameters applied in the low-res domain.
+    let tiling: TiledInferenceConfig
+
+    init(downsample: Int = 4, tiling: TiledInferenceConfig = TiledInferenceConfig(tileSize: 640,
+                                                                                  overlap: 48,
+                                                                                  blendProfile: .cosine)) {
+        precondition(downsample > 0, "Downsample factor must be positive")
+        self.downsample = downsample
+        self.tiling = tiling
+    }
+}
+
 /// Public-facing tile context surfaced to the tile processor.
 struct TiledTileContext {
     let originX: Int
     let originY: Int
     let width: Int
     let height: Int
+}
+
+/// Captures the low-res gain field covering a single high-res tile.
+struct GainFieldTile {
+    let width: Int
+    let height: Int
+    let pixels: [SIMD3<Float>]
+
+    init(width: Int, height: Int, pixels: [SIMD3<Float>]) {
+        precondition(pixels.count == width * height, "Gain tile pixel count must match dimensions")
+        self.width = width
+        self.height = height
+        self.pixels = pixels
+    }
+
+    subscript(x: Int, y: Int) -> SIMD3<Float> {
+        pixels[y * width + x]
+    }
 }
 
 /// Describes a tile placement and its overlap constraints.
@@ -93,6 +127,66 @@ struct TiledInferenceEngine {
         for placement in placements {
             let crop = crop(image: image, placement: placement)
             let processed = tileProcessor(crop, placement.context)
+            precondition(processed.width == placement.context.width && processed.height == placement.context.height,
+                         "Tile processor must not change tile dimensions")
+
+            blend(processed: processed,
+                  placement: placement,
+                  blendProfile: config.blendProfile,
+                  accumPixels: &accumPixels,
+                  accumWeights: &accumWeights,
+                  fullWidth: image.width)
+        }
+
+        var outputPixels = [SIMD3<Float>]()
+        outputPixels.reserveCapacity(image.width * image.height)
+
+        for index in 0 ..< accumPixels.count {
+            let weight = accumWeights[index]
+            if weight > 0 {
+                outputPixels.append(accumPixels[index] / weight)
+            } else {
+                outputPixels.append(accumPixels[index])
+            }
+        }
+
+        return RGBImage(width: image.width, height: image.height, pixels: outputPixels)
+    }
+
+    /// Processes an RGB image with an auxiliary low-resolution gain-field pass.
+    /// - Parameters:
+    ///   - image: Input RGB image.
+    ///   - config: Tile sizing and blending configuration for the high-res pass.
+    ///   - gainConfig: Downsampling and tiling configuration for the gain-field pass.
+    ///   - gainProcessor: Closure invoked per low-res tile that returns per-channel gains.
+    ///   - tileProcessor: Closure invoked per high-res tile with the corresponding gain tile.
+    /// - Returns: A stitched RGB image.
+    func processWithGainField(image: RGBImage,
+                              config: TiledInferenceConfig = TiledInferenceConfig(),
+                              gainConfig: TiledGainFieldConfig = TiledGainFieldConfig(),
+                              gainProcessor: (RGBImage, TiledTileContext) -> RGBImage,
+                              tileProcessor: (RGBImage, TiledTileContext, GainFieldTile) -> RGBImage) -> RGBImage {
+        let lowResImage = downsample(image: image, factor: gainConfig.downsample)
+        let lowResGain = process(image: lowResImage,
+                                 config: gainConfig.tiling,
+                                 tileProcessor: gainProcessor)
+        let fullResGain = upsampleNearest(image: lowResGain,
+                                          factor: gainConfig.downsample,
+                                          targetWidth: image.width,
+                                          targetHeight: image.height)
+
+        let placements = makePlacements(imageWidth: image.width,
+                                        imageHeight: image.height,
+                                        config: config)
+
+        var accumPixels = [SIMD3<Float>](repeating: .zero, count: image.width * image.height)
+        var accumWeights = [Float](repeating: 0, count: image.width * image.height)
+
+        for placement in placements {
+            let crop = crop(image: image, placement: placement)
+            let gainCrop = crop(image: fullResGain, placement: placement)
+            let gainTile = GainFieldTile(width: gainCrop.width, height: gainCrop.height, pixels: gainCrop.pixels)
+            let processed = tileProcessor(crop, placement.context, gainTile)
             precondition(processed.width == placement.context.width && processed.height == placement.context.height,
                          "Tile processor must not change tile dimensions")
 
@@ -168,6 +262,51 @@ private extension TiledInferenceEngine {
         }
 
         return Array(Set(positions)).sorted()
+    }
+
+    func downsample(image: RGBImage, factor: Int) -> RGBImage {
+        guard factor > 1 else { return image }
+        let outputWidth = Int(ceil(Double(image.width) / Double(factor)))
+        let outputHeight = Int(ceil(Double(image.height) / Double(factor)))
+        var outputPixels = [SIMD3<Float>](repeating: .zero, count: outputWidth * outputHeight)
+
+        for y in 0 ..< outputHeight {
+            for x in 0 ..< outputWidth {
+                var sum = SIMD3<Float>(repeating: 0)
+                var count: Float = 0
+
+                for dy in 0 ..< factor {
+                    for dx in 0 ..< factor {
+                        let sourceX = x * factor + dx
+                        let sourceY = y * factor + dy
+                        if sourceX < image.width && sourceY < image.height {
+                            sum += image[sourceX, sourceY]
+                            count += 1
+                        }
+                    }
+                }
+
+                outputPixels[y * outputWidth + x] = count > 0 ? sum / count : sum
+            }
+        }
+
+        return RGBImage(width: outputWidth, height: outputHeight, pixels: outputPixels)
+    }
+
+    func upsampleNearest(image: RGBImage, factor: Int, targetWidth: Int, targetHeight: Int) -> RGBImage {
+        guard factor > 1 else { return image }
+        var pixels = [SIMD3<Float>](repeating: .zero, count: targetWidth * targetHeight)
+
+        for y in 0 ..< targetHeight {
+            let sourceY = min(y / factor, image.height - 1)
+            for x in 0 ..< targetWidth {
+                let sourceX = min(x / factor, image.width - 1)
+                let source = image[sourceX, sourceY]
+                pixels[y * targetWidth + x] = source
+            }
+        }
+
+        return RGBImage(width: targetWidth, height: targetHeight, pixels: pixels)
     }
 
     func crop(image: RGBImage, placement: TilePlacement) -> RGBImage {
