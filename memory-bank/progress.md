@@ -10,6 +10,7 @@
 - Mac (designed for iPad) and Vision Pro (designed for iPad) support enabled; Mac Catalyst support removed.
 - Privacy keys for camera and photo library add access configured via build settings.
 - Synthetic geometric registration estimator (2× downsample + cross-correlation) with unit tests to validate translation recovery.
+- Fixture-backed regression test that asserts translation and correlation thresholds for the alignment estimator.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
