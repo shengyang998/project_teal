@@ -3,7 +3,7 @@
 ### Current Focus
 - Lock the 48MP linear RGB plan into executable steps with sensor-consistency gates.
 - Stand up the forward operator and synthetic tests that gate training against the 12MP RAW anchor.
-- Prepare for gain-field/differentiable model scaffolding and export hooks.
+- Land the gain-field/differentiable model scaffolding and export hooks.
 
 ### Recent Changes
 - Initialized Git repository and `.gitignore` for Xcode/CMake.
@@ -14,9 +14,9 @@
 - Added a synthetic geometric registration estimator (downsample + cross-correlation) with tests and marked the alignment step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Introduced a fixture-backed regression test for the geometric alignment estimator to enforce translation/score thresholds.
 - Implemented the quad-Bayer forward operator with per-channel scaling and 2×2 binning plus synthetic pattern tests; marked the sensor-consistency step complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Built a PyTorch two-head UNet scaffold with gain-field and detail heads plus Core ML export helper and shape tests.
 
 ### Next Steps
-- Wire model scaffolding for gain-field/differentiable heads and export hooks.
 - Add anchor and gradient losses that consume the forward operator output.
 - Build tiled inference prototype (no model) to validate device memory/latency envelopes on target hardware.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths.
