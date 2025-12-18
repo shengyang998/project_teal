@@ -22,7 +22,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Build two-head UNet-style network with Core ML–friendly ops.
 - [x] Inputs: linearized ProRAW48 (detail) + RAW12 guidance (demosaic → 12MP RGB → 2× upsample).
 - [x] Outputs: gain field head (smooth inverse-LTM gains) and detail head (full-res residual); compose \`\hat{L}_{48} = max(0, I^{lin}_{48} \odot g + r)\`.
-- [ ] Provide model export hooks (Torch → Core ML) and shape tests.
+- [x] Provide model export hooks (Torch → Core ML) and shape tests.
 
 ## 4. Losses & Training Schedule
 - [ ] Anchor loss: L1/Charbonnier on \`F(\hat{L}_{48})\` vs RAW12 mosaic.

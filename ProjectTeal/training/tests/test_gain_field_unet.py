@@ -1,6 +1,7 @@
 import torch
 
 from ProjectTeal.training.models import GainFieldUNet, GainFieldUNetConfig
+from ProjectTeal.training.models.gain_field_unet import trace_for_coreml
 
 
 def test_output_shapes():
@@ -24,3 +25,18 @@ def test_export_inputs_shape_matches_config():
 
     assert example.shape == (1, config.in_channels, 128, 256)
     assert gain_out.shape == (1, config.gain_channels, 32, 64)
+
+
+def test_trace_for_coreml_preserves_output_shapes():
+    config = GainFieldUNetConfig(base_channels=8)
+    model = GainFieldUNet(config)
+
+    traced, example, output_shapes = trace_for_coreml(model, image_size=(64, 96))
+
+    assert example.shape == (1, config.in_channels, 64, 96)
+    assert output_shapes["gain"] == torch.Size([1, config.gain_channels, 16, 24])
+    assert output_shapes["detail"] == torch.Size([1, config.detail_channels, 64, 96])
+
+    traced_outputs = traced(example)
+    assert traced_outputs["gain"].shape == output_shapes["gain"]
+    assert traced_outputs["detail"].shape == output_shapes["detail"]
