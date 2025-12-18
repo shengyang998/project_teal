@@ -42,3 +42,33 @@ def test_global_del_tm_respects_gain_percentile_and_clamps():
     # Ratios = [1,8,8,8]; 75th percentile is 8, but 6.0 clamp wins.
     assert torch.allclose(output.gain, torch.tensor([6.0]))
     assert torch.allclose(output.mosaic.mean(), torch.tensor(6.75))
+
+
+def test_gain_field_baseline_aligns_anchor_with_spatial_gains():
+    proraw = torch.full((1, 3, 4, 4), 0.5)
+    anchor = torch.tensor([[[[1.0, 1.0], [1.0, 2.0]]]])
+
+    output = baselines.gain_field_baseline(
+        proraw, anchor, smoothing_kernel=3, min_gain=0.5, max_gain=3.0
+    )
+
+    assert output.gain.shape == proraw.shape
+    assert torch.all(output.gain >= 0.5)
+    assert torch.all(output.gain <= 3.0)
+    assert torch.allclose(output.mosaic, anchor, atol=1e-2)
+
+
+def test_gain_field_baseline_smooths_gain_map():
+    proraw = torch.ones((1, 3, 4, 4))
+    anchor = torch.tensor([[[[1.0, 1.0], [1.0, 3.0]]]])
+
+    unsmoothed = baselines.gain_field_baseline(
+        proraw, anchor, smoothing_kernel=1, min_gain=0.5, max_gain=4.0
+    ).gain
+    smoothed = baselines.gain_field_baseline(
+        proraw, anchor, smoothing_kernel=3, min_gain=0.5, max_gain=4.0
+    ).gain
+
+    # The hot corner should bleed into neighbors when smoothing is enabled.
+    assert smoothed[0, 0, 2, 2] > unsmoothed[0, 0, 2, 2]
+    assert smoothed.mean() > unsmoothed.mean()

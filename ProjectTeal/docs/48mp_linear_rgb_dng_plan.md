@@ -62,6 +62,10 @@ Baseline A now exists as a global gain alignment path that inverts any provided
 tone curve, projects into the RAW anchor via the forward operator, and applies a
 robust percentile gain to match exposure without spatial variation.
 
+Baseline B is implemented as a spatial gain-field baseline that derives a
+smoothed gain map from the RAW anchor mismatch and applies it uniformly across
+ProRAW48 channels to strip local tone mapping without residual prediction.
+
 ## Recommended Execution Order
 1. Finish alignment and correct forward operator (Phases 1–2).
 2. Train gain-only model with anchor loss + mild regularization.

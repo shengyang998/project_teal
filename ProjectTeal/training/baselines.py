@@ -4,6 +4,10 @@ Baseline A is a global de-LTM fallback that rescales ProRAW48 into the RAW
 anchor exposure using a robust percentile gain. It assumes a monotonic tone
 curve can be inverted globally and avoids any spatial variation so the path is
 fast and deterministic.
+
+Baseline B is a gain-field-only fallback that estimates a smooth spatial gain
+map from the RAW anchor mismatch and applies it uniformly to ProRAW48. This
+path avoids residual/detail prediction to quickly strip local tone mapping.
 """
 
 from __future__ import annotations
@@ -22,7 +26,7 @@ class BaselineOutput:
     Attributes:
         rgb48: Linear 48MP RGB after baseline correction.
         mosaic: Forward-operator projection into RAW anchor space.
-        gain: Scalar gain applied per batch element.
+        gain: Scalar gain (Baseline A) or spatial gain map (Baseline B).
     """
 
     rgb48: torch.Tensor
@@ -88,4 +92,60 @@ def global_del_tm_baseline(
     )
 
     return BaselineOutput(rgb48=corrected_rgb, mosaic=baseline_mosaic, gain=gain)
+
+
+def gain_field_baseline(
+    proraw_rgb48: torch.Tensor,
+    anchor_mosaic: torch.Tensor,
+    *,
+    cfa_pattern: CFAPattern = "rggb",
+    channel_scale: torch.Tensor | None = None,
+    upsample_mode: str = "bilinear",
+    smoothing_kernel: int = 7,
+    min_gain: float = 0.25,
+    max_gain: float = 4.0,
+    eps: float = 1e-6,
+) -> BaselineOutput:
+    """Compute Baseline B: spatial gain-field fallback.
+
+    The baseline computes a gain field from the RAW anchor mismatch using the
+    differentiable forward operator, upsamples it to full resolution, smooths
+    the map, and applies it channel-wise to the linear ProRAW48 input.
+    """
+
+    _validate_shapes(proraw_rgb48, anchor_mosaic)
+
+    simulated_anchor = quad_bayer_forward(
+        proraw_rgb48, cfa_pattern=cfa_pattern, channel_scale=channel_scale
+    )
+    if simulated_anchor.shape != anchor_mosaic.shape:
+        raise ValueError("anchor_mosaic must match forward-projected shape")
+
+    gain_anchor = anchor_mosaic / (simulated_anchor + eps)
+    gain_anchor = gain_anchor.clamp(min=min_gain, max=max_gain)
+
+    gain_field = torch.nn.functional.interpolate(
+        gain_anchor,
+        size=proraw_rgb48.shape[-2:],
+        mode=upsample_mode,
+        align_corners=False,
+    )
+
+    if smoothing_kernel > 1:
+        padding = smoothing_kernel // 2
+        gain_field = torch.nn.functional.avg_pool2d(
+            gain_field, kernel_size=smoothing_kernel, stride=1, padding=padding
+        )
+
+    gain_field = gain_field.repeat(1, 3, 1, 1)
+    corrected_rgb = torch.clamp(proraw_rgb48 * gain_field, min=0.0)
+    baseline_mosaic = quad_bayer_forward(
+        corrected_rgb, cfa_pattern=cfa_pattern, channel_scale=channel_scale
+    )
+
+    return BaselineOutput(
+        rgb48=corrected_rgb,
+        mosaic=baseline_mosaic,
+        gain=gain_field,
+    )
 
