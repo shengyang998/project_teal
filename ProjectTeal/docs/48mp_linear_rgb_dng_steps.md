@@ -36,7 +36,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Implement report generator comparing to global inverse tone-curve baseline.
 
 ## 6. iOS Inference Pipeline
-- [ ] Tiled inference (512–1024 px tiles, 32–64 px overlap) with cosine/linear blending.
+- [x] Tiled inference (512–1024 px tiles, 32–64 px overlap) with cosine/linear blending.
 - [ ] Low-res gain field over larger context; stitch into full-res output.
 - [ ] Core ML integration with supported ops and FP16 weights; evaluate INT8 after visual sign-off.
 - [ ] Ensure latency/memory targets for 48MP capture.
