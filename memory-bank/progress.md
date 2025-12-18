@@ -15,6 +15,7 @@
 - Two-head PyTorch UNet scaffold for gain-field and detail heads with a Core ML tracing helper (output shapes) and unit tests.
 - Model input/output helpers that upsample RAW12 guidance, concatenate inputs, and compose gain+residual outputs with unit tests.
 - PyTorch training losses for the anchor forward operator (Charbonnier), gradient/detail preservation after global rendering, and gain-field smoothness/range regularization with unit tests.
+- Evaluation metrics covering PSNR/SSIM on the mosaiced RAW anchor, per-CFA residual histograms, and gradient correlation/halo indicators after global rendering, with unit tests.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.

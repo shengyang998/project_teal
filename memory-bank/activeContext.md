@@ -18,10 +18,11 @@
 - Added input/guidance preparation and output composition helpers around the gain-field model with unit tests; marked the model-input/output steps complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Added a Core ML tracing helper with shape introspection and tests, and marked the export step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Implemented anchor/gradient/gain regularization losses that consume the forward operator output with targeted unit tests and marked step 4 complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Added evaluation metrics for PSNR/SSIM on the RAW mosaic, per-CFA residual histograms, and gradient correlation/halo indicators after global rendering, with unit tests; marked the metrics step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
 - Build tiled inference prototype (no model) to validate device memory/latency envelopes on target hardware.
-- Add evaluation harness (metrics + qualitative sweeps) to track RAW-anchor and halo/detail performance.
+- Expand evaluation harness with curated qualitative sweeps and reporting to benchmark RAW-anchor and halo/detail performance.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths.
 
 ### Resolved Decisions
