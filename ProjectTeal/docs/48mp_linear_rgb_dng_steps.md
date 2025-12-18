@@ -19,7 +19,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Add synthetic-pattern tests to verify indexing and binning correctness.
 
 ## 3. Model Architecture
-- [ ] Build two-head UNet-style network with Core ML–friendly ops.
+- [x] Build two-head UNet-style network with Core ML–friendly ops.
 - [ ] Inputs: linearized ProRAW48 (detail) + RAW12 guidance (demosaic → 12MP RGB → 2× upsample).
 - [ ] Outputs: gain field head (smooth inverse-LTM gains) and detail head (full-res residual); compose \`\hat{L}_{48} = max(0, I^{lin}_{48} \odot g + r)\`.
 - [ ] Provide model export hooks (Torch → Core ML) and shape tests.
