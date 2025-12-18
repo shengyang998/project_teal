@@ -135,22 +135,40 @@ class GainFieldUNet(nn.Module):
         return example, gain_out
 
 
-def export_to_coreml(model: GainFieldUNet, image_size: Tuple[int, int], file_path: str) -> None:
-    """Export the model to Core ML via torchscript tracing.
+@torch.no_grad()
+def trace_for_coreml(
+    model: GainFieldUNet, image_size: Tuple[int, int]
+) -> Tuple[torch.jit.ScriptModule, torch.Tensor, Dict[str, torch.Size]]:
+    """Trace the model for Core ML export and return shapes for outputs.
 
-    This function delays heavy imports to keep the dependency surface light for
-    environments that only need the architecture definition.
+    This helper keeps export-specific logic in one place so tests can validate
+    the traced graph and output tensor sizes without depending on coremltools
+    during CI runs.
     """
+
+    example, _ = model.export_coreml_inputs(image_size)
+    traced = torch.jit.trace(model.eval(), example)
+    outputs = traced(example)
+    output_shapes = {name: tensor.shape for name, tensor in outputs.items()}
+    return traced, example, output_shapes
+
+
+def export_to_coreml(model: GainFieldUNet, image_size: Tuple[int, int], file_path: str) -> None:
+    """Export the model to Core ML via torchscript tracing."""
 
     try:
         import coremltools as ct  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover - optional dependency
         raise ModuleNotFoundError("coremltools is required for export") from exc
 
-    example, _ = model.export_coreml_inputs(image_size)
-    traced = torch.jit.trace(model.eval(), example)
+    traced, example, output_shapes = trace_for_coreml(model, image_size)
+    output_specs = [
+        ct.TensorType(name=name, shape=shape)
+        for name, shape in output_shapes.items()
+    ]
     mlmodel = ct.convert(
         traced,
         inputs=[ct.TensorType(name="input", shape=example.shape)],
+        outputs=output_specs,
     )
     mlmodel.save(file_path)
