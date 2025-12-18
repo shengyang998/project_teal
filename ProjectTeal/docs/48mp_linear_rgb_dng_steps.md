@@ -14,9 +14,9 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Add fixture-backed unit tests that assert alignment error thresholds (synthetic correlation harness landed).
 
 ## 2. Differentiable Sensor-Consistency Operator
-- [ ] Implement forward operator `F`: mosaic predicted 48MP RGB into quad-Bayer, 2×2 bin to 12MP, apply per-channel scaling.
-- [ ] Optimize for speed and determinism; keep the graph differentiable.
-- [ ] Add synthetic-pattern tests to verify indexing and binning correctness.
+- [x] Implement forward operator `F`: mosaic predicted 48MP RGB into quad-Bayer, 2×2 bin to 12MP, apply per-channel scaling.
+- [x] Optimize for speed and determinism; keep the graph differentiable.
+- [x] Add synthetic-pattern tests to verify indexing and binning correctness.
 
 ## 3. Model Architecture
 - [ ] Build two-head UNet-style network with Core ML–friendly ops.

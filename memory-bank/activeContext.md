@@ -1,10 +1,9 @@
 ## Active Context
 
 ### Current Focus
-- Establish project scaffolding and memory bank.
-- Define initial imaging pipeline (RAW open + minimal filter pass).
-- Add camera capture to acquire iOS RAW (ProRAW) images.
-- Lock the 48MP linear RGB plan into executable steps: alignment gates, forward operator tests, and tiled-prototype envelopes.
+- Lock the 48MP linear RGB plan into executable steps with sensor-consistency gates.
+- Stand up the forward operator and synthetic tests that gate training against the 12MP RAW anchor.
+- Prepare for gain-field/differentiable model scaffolding and export hooks.
 
 ### Recent Changes
 - Initialized Git repository and `.gitignore` for Xcode/CMake.
@@ -14,16 +13,13 @@
 - Captured near-term execution priorities in `ProjectTeal/docs/48mp_linear_rgb_dng_plan.md` to focus alignment, forward-operator, and iOS prototyping work.
 - Added a synthetic geometric registration estimator (downsample + cross-correlation) with tests and marked the alignment step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Introduced a fixture-backed regression test for the geometric alignment estimator to enforce translation/score thresholds.
+- Implemented the quad-Bayer forward operator with per-channel scaling and 2×2 binning plus synthetic pattern tests; marked the sensor-consistency step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
-- Scaffold repo layout and SPM packages.
-- Add RxSwift via SPM and set up a shared `CIContext` service.
-- Implement RAW open + minimal pipeline (identity + exposure adjust) with exports per stage.
-- Create `tools/python/requirements.txt` and `ci_inspect.py` for histograms/side-by-sides.
-- Add Info.plist camera and photo library usage descriptions.
-- Test camera permissions on Mac (designed for iPad) and Vision Pro (designed for iPad) platforms.
-- Wire forward-operator unit tests before training.
-- Prototype tiled inference without the model to baseline device memory/latency envelopes.
+- Wire model scaffolding for gain-field/differentiable heads and export hooks.
+- Add anchor and gradient losses that consume the forward operator output.
+- Build tiled inference prototype (no model) to validate device memory/latency envelopes on target hardware.
+- Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths.
 
 ### Resolved Decisions
 - **iOS Deployment Target**: iOS 18+ (minimum)
