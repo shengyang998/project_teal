@@ -11,6 +11,7 @@
 - Privacy keys for camera and photo library add access configured via build settings.
 - Synthetic geometric registration estimator (2× downsample + cross-correlation) with unit tests to validate translation recovery.
 - Fixture-backed regression test that asserts translation and correlation thresholds for the alignment estimator.
+- Quad-Bayer forward operator that mosaics 48MP RGB into CFA space, 2×2 bins to 12MP, and applies per-channel scaling with synthetic tests for indexing/binning correctness.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -20,8 +21,8 @@
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
 - Execution of the 48MP linear RGB DNG step plan in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md`.
-- Alignment fixtures + forward-operator tests to gate model training.
 - Early tiled-inference prototype (no model) to validate device memory/latency envelopes for 48MP frames.
+- Gain-field/differentiable model scaffolding and training losses that consume the forward operator output.
 
 ### Current status
 - Early setup phase; requirements and architecture documented.
