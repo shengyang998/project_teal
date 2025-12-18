@@ -17,6 +17,7 @@
 - PyTorch training losses for the anchor forward operator (Charbonnier), gradient/detail preservation after global rendering, and gain-field smoothness/range regularization with unit tests.
 - Evaluation metrics covering PSNR/SSIM on the mosaiced RAW anchor, per-CFA residual histograms, and gradient correlation/halo indicators after global rendering, with unit tests.
 - Qualitative manifest loader and fixture-backed coverage for backlit, mixed light, bright windows, city lights, foliage, and fine-pattern scenarios with unit tests.
+- Reporting helper that compares candidate metrics against a global inverse tone-curve baseline and surfaces qualitative tag coverage.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -27,7 +28,7 @@
 - Python analysis tools and export pipeline for debugging.
 - Execution of the 48MP linear RGB DNG step plan in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md`.
 - Early tiled-inference prototype (no model) to validate device memory/latency envelopes for 48MP frames.
-- Evaluation harness reporting layer; the qualitative coverage set is curated but needs comparison tooling.
+- Evaluation harness reporting layer: qualitative coverage is curated and metrics exist; extend reporting outputs into the on-device pipeline.
 
 ### Current status
 - Early setup phase; requirements and architecture documented.

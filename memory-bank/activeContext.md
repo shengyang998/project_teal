@@ -20,10 +20,10 @@
 - Implemented anchor/gradient/gain regularization losses that consume the forward operator output with targeted unit tests and marked step 4 complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Added evaluation metrics for PSNR/SSIM on the RAW mosaic, per-CFA residual histograms, and gradient correlation/halo indicators after global rendering, with unit tests; marked the metrics step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Curated qualitative evaluation coverage (backlit, mixed light, bright windows, city lights, foliage, fine patterns) with a manifest loader and fixture-backed tests; marked the qualitative-set step complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Built a reporting helper that compares candidate metrics against a global inverse tone-curve baseline, aggregates deltas, and surfaces qualitative tag coverage; marked the evaluation-reporting step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
 - Build tiled inference prototype (no model) to validate device memory/latency envelopes on target hardware.
-- Add evaluation reporting that consumes the curated qualitative set and quantitative metrics for side-by-side regressions.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths.
 
 ### Resolved Decisions
