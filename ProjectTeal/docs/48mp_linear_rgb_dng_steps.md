@@ -44,7 +44,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 ## 7. 48MP Linear RGB DNG Writer
 - [x] Emit 3-channel linear image (tiled, optional lossless compression), SamplesPerPixel=3 (no CFA tags).
 - [x] Write metadata: color matrices/ICC, AsShotNeutral/WB, baseline exposure/black level matching normalization.
-- [ ] Compatibility validation in Lightroom/ACR, Apple Photos/Preview, and an open-source reader.
+- [x] Compatibility validation in Lightroom/ACR, Apple Photos/Preview, and an open-source reader.
 
 ## 8. Baselines & Risk Mitigation
 - [ ] Implement Baseline A: global de-LTM mapping from ProRAW48 to RAW12-guided linear exposure.
