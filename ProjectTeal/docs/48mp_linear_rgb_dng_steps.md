@@ -25,10 +25,10 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Provide model export hooks (Torch → Core ML) and shape tests.
 
 ## 4. Losses & Training Schedule
-- [ ] Anchor loss: L1/Charbonnier on \`F(\hat{L}_{48})\` vs RAW12 mosaic.
-- [ ] Detail preservation: gradient loss after global-only rendering (tone curve + CCM; no local ops).
-- [ ] Gain regularization: |∇g|₁ smoothness + range penalties.
-- [ ] Training schedule: anchor-heavy start; introduce detail loss after convergence; document configs.
+- [x] Anchor loss: Charbonnier on \`F(\hat{L}_{48})\` vs RAW12 mosaic using the differentiable forward operator with optional per-channel scaling.
+- [x] Detail preservation: gradient loss after global-only rendering (tone curve + CCM; no local ops).
+- [x] Gain regularization: |∇g|₁ smoothness + range penalties.
+- [x] Training schedule: anchor-heavy start; introduce gradient/detail loss once anchor stabilizes; track configs (loss weights, gain range, tone curve/CCM) alongside checkpoints.
 
 ## 5. Evaluation Harness
 - [ ] Metrics: PSNR/SSIM on RAW12 mosaic, per-CFA error histograms, gradient correlation/halo indicators post global rendering.

@@ -14,6 +14,7 @@
 - Quad-Bayer forward operator that mosaics 48MP RGB into CFA space, 2×2 bins to 12MP, and applies per-channel scaling with synthetic tests for indexing/binning correctness.
 - Two-head PyTorch UNet scaffold for gain-field and detail heads with a Core ML tracing helper (output shapes) and unit tests.
 - Model input/output helpers that upsample RAW12 guidance, concatenate inputs, and compose gain+residual outputs with unit tests.
+- PyTorch training losses for the anchor forward operator (Charbonnier), gradient/detail preservation after global rendering, and gain-field smoothness/range regularization with unit tests.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -24,7 +25,7 @@
 - Python analysis tools and export pipeline for debugging.
 - Execution of the 48MP linear RGB DNG step plan in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md`.
 - Early tiled-inference prototype (no model) to validate device memory/latency envelopes for 48MP frames.
-- Gain-field/differentiable model scaffolding and training losses that consume the forward operator output.
+- Evaluation harness with metrics/qualitative sets and reporting.
 
 ### Current status
 - Early setup phase; requirements and architecture documented.
