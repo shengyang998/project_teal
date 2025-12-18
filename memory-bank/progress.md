@@ -20,6 +20,7 @@
 - Reporting helper that compares candidate metrics against a global inverse tone-curve baseline and surfaces qualitative tag coverage.
 - Tiled inference prototype with configurable tiles/overlaps, cosine/linear blending, and unit tests to validate stitching and coverage.
 - Low-res gain-field pass that downsamples, tiles, blends, upsamples, and injects gains into the high-res tiles with unit validation.
+- Core ML gain-field executor that loads FP16-first models, converts MLMultiArray I/O, upsamples gain with bilinear sampling, and composes linear predictions; INT8 kept as a deliberate follow-up.
 
 ### What's left to build
 - Project scaffolding (layers, SPM targets, DI wiring) for iOS 18+.
@@ -28,7 +29,7 @@
 - Filter pipeline engine and custom filter scaffolding.
 - Display P3/HDR color management implementation.
 - Python analysis tools and export pipeline for debugging.
-- Execution of the 48MP linear RGB DNG step plan in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md`.
+- Remaining 48MP linear RGB DNG steps in `ProjectTeal/docs/48mp_linear_rgb_dng_steps.md` (latency/memory validation, linear DNG writer, baselines).
 - Evaluation harness reporting layer: qualitative coverage is curated and metrics exist; extend reporting outputs into the on-device pipeline.
 
 ### Current status
