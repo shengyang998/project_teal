@@ -10,6 +10,29 @@ import Foundation
 @testable import ProjectTeal
 import Testing
 
+private struct AlignmentFixture: Decodable {
+    let description: String
+    let lowResWidth: Int
+    let lowResHeight: Int
+    let lowResPixels: [Float]
+    let highResWidth: Int
+    let highResHeight: Int
+    let highResPixels: [Float]
+    let expectedTranslation: [Double]
+    let minScore: Double
+}
+
+extension AlignmentFixture {
+    static func load(named name: String = "AlignmentFixture") throws -> AlignmentFixture {
+        let fileURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("\(name).json")
+
+        let data = try Data(contentsOf: fileURL)
+        return try JSONDecoder().decode(AlignmentFixture.self, from: data)
+    }
+}
+
 struct GeometricRegistrationTests {
     @Test func findsTranslationBetweenDownsampledPairs() async throws {
         // Create a 6x6 low-res pattern.
@@ -83,5 +106,26 @@ struct GeometricRegistrationTests {
 
         #expect(result.translation == SIMD2<Double>(repeating: 0))
         #expect(result.scale == SIMD2<Double>(repeating: 2))
+    }
+
+    @Test func locksToFixtureWithinThreshold() throws {
+        let fixture = try AlignmentFixture.load()
+
+        let lowRes = GrayscaleImage(width: fixture.lowResWidth,
+                                    height: fixture.lowResHeight,
+                                    pixels: fixture.lowResPixels)
+        let highRes = GrayscaleImage(width: fixture.highResWidth,
+                                     height: fixture.highResHeight,
+                                     pixels: fixture.highResPixels)
+
+        let registration = GeometricRegistration()
+        let result = registration.estimateAlignment(highRes: highRes,
+                                                    lowRes: lowRes,
+                                                    searchRadius: 4)
+
+        let expectedTranslation = SIMD2<Double>(fixture.expectedTranslation[0], fixture.expectedTranslation[1])
+        #expect(result.translation == expectedTranslation)
+        #expect(result.scale == SIMD2<Double>(repeating: 2))
+        #expect(result.score >= fixture.minScore)
     }
 }

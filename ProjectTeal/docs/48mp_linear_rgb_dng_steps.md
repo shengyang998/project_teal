@@ -11,7 +11,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Implement RAW12 parsing: black/white level, CFA layout, WB gains, normalization to linear.
 - [x] Linearize ProRAW48 capture (undo EOTF, avoid local ops) into consistent linear space.
 - [x] Geometric registration: compute 2× scale + translation/warp; validate by downsampling ProRAW48 to 12MP and comparing to demosaiced RAW12 edges (synthetic harness in place).
-- [ ] Add fixture-backed unit tests that assert alignment error thresholds (synthetic correlation harness landed).
+- [x] Add fixture-backed unit tests that assert alignment error thresholds (synthetic correlation harness landed).
 
 ## 2. Differentiable Sensor-Consistency Operator
 - [ ] Implement forward operator `F`: mosaic predicted 48MP RGB into quad-Bayer, 2×2 bin to 12MP, apply per-channel scaling.
