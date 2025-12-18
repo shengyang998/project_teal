@@ -15,6 +15,7 @@
 - Introduced a fixture-backed regression test for the geometric alignment estimator to enforce translation/score thresholds.
 - Implemented the quad-Bayer forward operator with per-channel scaling and 2×2 binning plus synthetic pattern tests; marked the sensor-consistency step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Built a PyTorch two-head UNet scaffold with gain-field and detail heads plus Core ML export helper and shape tests.
+- Added input/guidance preparation and output composition helpers around the gain-field model with unit tests; marked the model-input/output steps complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
 - Add anchor and gradient losses that consume the forward operator output.
