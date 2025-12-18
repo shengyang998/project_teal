@@ -25,9 +25,10 @@
 - Added a low-res gain-field tiling pass with downsampled blending, upsampling, and high-res gain injection plus unit tests; marked the gain-field context step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Wrapped the gain-field Core ML model with an FP16-first executor that converts MLMultiArray I/O, upsamples the gain map with bilinear sampling, and composes linear predictions; marked the Core ML integration step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 - Instrumented tiled inference with tile-level latency sampling and working-set estimation, exposed metrics-bearing entry points, and marked the latency/memory validation step complete in `docs/48mp_linear_rgb_dng_steps.md`.
+- Added a linear DNG writer pass that strips CFA tags, enforces SamplesPerPixel=3 RGB layout, and exposes tiling plus lossless JPEG compression options with unit validation; marked the first DNG-writer step complete in `docs/48mp_linear_rgb_dng_steps.md`.
 
 ### Next Steps
-- Stand up the 48MP linear RGB DNG writer (image layout plus metadata) and validate compatibility with Lightroom/ACR and Photos.
+- Finish linear DNG metadata population (color matrices/WB/exposure) and validate compatibility in Lightroom/ACR, Photos/Preview, and an open-source reader.
 - Keep Python/CI analysis utilities (histograms/side-by-sides) in sync with RAW ingest paths and the gain-field path.
 
 ### Resolved Decisions

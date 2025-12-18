@@ -77,10 +77,12 @@ final class RAWProcessingPipeline {
         }
 
         let outputURL = RAWProcessingPipeline.makeOutputURL()
+        let writerOptions = LinearDNGWriter.Options(tileSize: 512, compression: .losslessJPEG)
         do {
             let dngOutput = try dngWriter.write(cgImage: cgImage,
                                                 metadata: CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
-                                                destinationURL: outputURL)
+                                                destinationURL: outputURL,
+                                                options: writerOptions)
             return .success(Result(dng: dngOutput, metadata: metadata, rawParsing: parsed))
         } catch {
             return .failure(.renderFailure)
