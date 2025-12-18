@@ -31,7 +31,7 @@ This guide breaks down the plan in `48mp_linear_rgb_dng_plan.md` into concrete, 
 - [x] Training schedule: anchor-heavy start; introduce gradient/detail loss once anchor stabilizes; track configs (loss weights, gain range, tone curve/CCM) alongside checkpoints.
 
 ## 5. Evaluation Harness
-- [ ] Metrics: PSNR/SSIM on RAW12 mosaic, per-CFA error histograms, gradient correlation/halo indicators post global rendering.
+- [x] Metrics: PSNR/SSIM on RAW12 mosaic, per-CFA error histograms, gradient correlation/halo indicators post global rendering.
 - [ ] Curate qualitative set (backlit, mixed light, bright windows, city lights, foliage, fine patterns).
 - [ ] Implement report generator comparing to global inverse tone-curve baseline.
 
