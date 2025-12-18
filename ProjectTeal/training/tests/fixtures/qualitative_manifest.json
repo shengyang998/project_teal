@@ -1,0 +1,40 @@
+{
+  "captures": [
+    {
+      "id": "backlit_sunroom",
+      "path": "qualitative/backlit_sunroom.dng",
+      "tags": ["backlit", "bright_windows", "interior"],
+      "notes": "Sunroom with strong window backlight and shadowed furniture."
+    },
+    {
+      "id": "mixed_light_cafe",
+      "path": "qualitative/mixed_light_cafe.dng",
+      "tags": ["mixed_light", "skin_tones", "tungsten", "neon"],
+      "notes": "Indoor cafe with tungsten and neon accent lights." 
+    },
+    {
+      "id": "city_lights_street",
+      "path": "qualitative/city_lights_street.dng",
+      "tags": ["city_lights", "night", "fine_patterns"],
+      "notes": "Night street scene with signage, speculars, and textured pavement."
+    },
+    {
+      "id": "foliage_mixed_shade",
+      "path": "qualitative/foliage_mixed_shade.dng",
+      "tags": ["foliage", "mixed_light", "fine_patterns"],
+      "notes": "Trees with dappled shade and high-frequency leaf detail."
+    },
+    {
+      "id": "bright_windows_office",
+      "path": "qualitative/bright_windows_office.dng",
+      "tags": ["bright_windows", "backlit", "fine_patterns"],
+      "notes": "Office interior with laptop text near blown windows."
+    },
+    {
+      "id": "fabric_detail",
+      "path": "qualitative/fabric_detail.dng",
+      "tags": ["fine_patterns", "mixed_light"],
+      "notes": "Stack of patterned fabrics for moiré and texture stability."
+    }
+  ]
+}

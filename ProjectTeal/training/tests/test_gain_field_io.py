@@ -1,4 +1,6 @@
-import torch
+import pytest
+
+torch = pytest.importorskip("torch")
 import torch.nn.functional as F
 
 from ProjectTeal.training.models import (

@@ -1,25 +1,18 @@
 """Training package for ProjectTeal."""
 
-from .losses import (
-    anchor_charbonnier_loss,
-    gain_regularization,
-    gradient_detail_loss,
-    quad_bayer_forward,
-)
-from .evaluation import (
-    gradient_consistency_metrics,
-    per_cfa_error_histogram,
-    psnr,
-    ssim,
-)
+from __future__ import annotations
 
-__all__ = [
-    "anchor_charbonnier_loss",
-    "gain_regularization",
-    "gradient_detail_loss",
-    "quad_bayer_forward",
-    "gradient_consistency_metrics",
-    "per_cfa_error_histogram",
-    "psnr",
-    "ssim",
-]
+from importlib import import_module
+from typing import TYPE_CHECKING, Any
+
+__all__ = ["evaluation", "losses", "models", "qualitative"]
+
+
+def __getattr__(name: str) -> Any:  # pragma: no cover - thin lazy loader
+    if name in __all__:
+        return import_module(f"{__name__}.{name}")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+if TYPE_CHECKING:  # pragma: no cover
+    from . import evaluation, losses, models, qualitative  # noqa: F401
