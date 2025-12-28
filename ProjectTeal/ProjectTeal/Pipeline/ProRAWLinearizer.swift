@@ -29,35 +29,45 @@ struct ProRAWLinearizer {
         }
 
         let normalized = normalization.applying(to: ciImage)
-        return contextProvider.renderLinearCGImage(from: normalized)
+        return contextProvider.renderLinearCGImage(from: normalized, clamped: true)
     }
 
     private func makeLinearCIImage(from data: Data) -> CIImage? {
-        let baseOptions: [CIImageOption: Any] = [
-            .applyOrientationProperty: true,
-            .cache: false
-        ]
-
-        if let rawFilter = CIRAWFilter(imageData: data, options: baseOptions) {
-            // Disable local tone mapping and gamut mapping to keep the output scene-referred.
-            rawFilter.setValue(true, forKey: kCIInputDisableLocalToneMap as String)
-            rawFilter.setValue(true, forKey: kCIInputDisableGamutMap as String)
-            rawFilter.setValue(false, forKey: kCIInputAllowDraftModeKey as String)
-
-            // Bias/boost set to zero keeps the decoder from applying global tone curves.
-            rawFilter.setValue(0.0, forKey: kCIInputBoostKey as String)
-            rawFilter.setValue(0.0, forKey: kCIInputBiasKey as String)
-            rawFilter.setValue(true, forKey: "inputLinearSpaceFilter")
-
-            // Avoid default sharpening/noise reduction that could mask sensor-consistency issues.
-            rawFilter.setValue(false, forKey: kCIInputEnableSharpening as String)
-            rawFilter.setValue(false, forKey: kCIInputEnableChromaticNoiseReduction as String)
+        // Try the modern CIRAWFilter API (iOS 15+)
+        if let rawFilter = CIRAWFilter(imageData: data, identifierHint: nil) {
+            // Disable local tone mapping to keep the output scene-referred/linear
+            rawFilter.localToneMapAmount = 0.0
+            
+            // Disable gamut mapping to preserve original color data
+            rawFilter.isGamutMappingEnabled = false
+            
+            // Disable draft mode for full quality
+            rawFilter.isDraftModeEnabled = false
+            
+            // Set boost to zero to avoid global tone curves
+            rawFilter.boostAmount = 0.0
+            rawFilter.shadowBias = 0.0
+            
+            // Disable sharpening and noise reduction to preserve sensor-level detail
+            rawFilter.sharpnessAmount = 0.0
+            rawFilter.colorNoiseReductionAmount = 0.0
+            rawFilter.luminanceNoiseReductionAmount = 0.0
+            
+            // Disable moire reduction and detail enhancement
+            rawFilter.moireReductionAmount = 0.0
+            rawFilter.detailAmount = 0.0
+            rawFilter.contrastAmount = 0.0
 
             if let output = rawFilter.outputImage {
                 return output
             }
         }
 
+        // Fallback: create CIImage and apply inverse tone curve
+        let baseOptions: [CIImageOption: Any] = [
+            .applyOrientationProperty: true
+        ]
+        
         guard let ciImage = CIImage(data: data, options: baseOptions) else {
             return nil
         }

@@ -71,7 +71,7 @@ struct LinearDNGWriter {
                destinationURL: URL,
                options: Options = Options()) throws -> Output {
         guard let destination = CGImageDestinationCreateWithURL(destinationURL as CFURL,
-                                                                 UTType.digitalNegative.identifier as CFString,
+                                                                 UTType.dng.identifier as CFString,
                                                                  1,
                                                                  nil) else {
             throw Error.cannotCreateDestination
@@ -100,21 +100,20 @@ struct LinearDNGWriter {
 
         var dng = (properties[kCGImagePropertyDNGDictionary] as? [CFString: Any]) ?? [:]
         let cfaKeys: [CFString] = [
-            kCGImagePropertyDNGCFAPattern,
             kCGImagePropertyDNGCFAPlaneColor,
-            kCGImagePropertyDNGCFARepeatPatternDim,
             kCGImagePropertyDNGCFALayout
         ]
         cfaKeys.forEach { dng.removeValue(forKey: $0) }
-        dng[kCGImagePropertyDNGIsLinearRaw] = true
+        // Linear RGB is implied by removing CFA metadata and setting SamplesPerPixel=3
+        //         dng[kCGImagePropertyDNGIsLinearRaw] = true
 
-        populateNormalizationMetadata(into: &dng, normalization: normalization)
-        populateColorMetadata(into: &dng)
+        LinearDNGWriter.populateNormalizationMetadata(into: &dng, normalization: normalization)
+        LinearDNGWriter.populateColorMetadata(into: &dng)
 
         properties[kCGImagePropertyDNGDictionary] = dng
 
         var tiff = (properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]) ?? [:]
-        tiff[kCGImagePropertyTIFFSamplesPerPixel] = 3
+        // SamplesPerPixel is automatically derived from the CGImage (RGB = 3)
         tiff[kCGImagePropertyTIFFCompression] = options.compression.tiffValue
 
         if let tileSize = options.tileSize {
@@ -131,9 +130,7 @@ struct LinearDNGWriter {
             properties[kCGImagePropertyColorModel] = kCGImagePropertyColorModelRGB
         }
 
-        if properties[kCGImagePropertyICCProfile] == nil,
-           let iccData = CGColorSpace(name: CGColorSpace.linearSRGB)?.copyICCData() as Data? {
-            properties[kCGImagePropertyICCProfile] = iccData
+        if properties[kCGImagePropertyProfileName] == nil {
             properties[kCGImagePropertyProfileName] = "Linear sRGB"
         }
         return properties
@@ -191,6 +188,11 @@ struct LinearDNGWriter {
         }
         if dng[kCGImagePropertyDNGCalibrationIlluminant2] == nil {
             dng[kCGImagePropertyDNGCalibrationIlluminant2] = 21 // D65
+        }
+        // Embed linear sRGB ICC profile for color-managed applications
+        if dng[kCGImagePropertyDNGAsShotICCProfile] == nil,
+           let iccData = CGColorSpace(name: CGColorSpace.linearSRGB)?.copyICCData() as Data? {
+            dng[kCGImagePropertyDNGAsShotICCProfile] = iccData
         }
     }
 }

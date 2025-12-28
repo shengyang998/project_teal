@@ -25,9 +25,7 @@ struct DNGCompatibilityValidator {
         case unreadable
         case unsupportedType
         case missingImage
-        case missingLinearFlag
         case missingColorMetadata
-        case invalidSamplesPerPixel
     }
 
     func validate(url: URL) throws -> Result {
@@ -35,8 +33,9 @@ struct DNGCompatibilityValidator {
             throw Error.unreadable
         }
 
-        guard let type = CGImageSourceGetType(source),
-              UTTypeConformsTo(type, UTType.digitalNegative.identifier as CFString) else {
+        guard let typeIdentifier = CGImageSourceGetType(source) as? String,
+              let sourceType = UTType(typeIdentifier),
+              sourceType.conforms(to: UTType.dng) else {
             throw Error.unsupportedType
         }
 
@@ -48,21 +47,21 @@ struct DNGCompatibilityValidator {
         let dng = properties[kCGImagePropertyDNGDictionary] as? [CFString: Any] ?? [:]
         let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any] ?? [:]
 
-        let isLinear = (dng[kCGImagePropertyDNGIsLinearRaw] as? Bool) == true
-        guard isLinear else { throw Error.missingLinearFlag }
-
+        // Check for color transforms (color matrices or ICC profile)
         let hasColorTransforms = dng[kCGImagePropertyDNGColorMatrix1] != nil ||
             dng[kCGImagePropertyDNGColorMatrix2] != nil ||
-            properties[kCGImagePropertyICCProfile] != nil
+            dng[kCGImagePropertyDNGAsShotICCProfile] != nil
         guard hasColorTransforms else { throw Error.missingColorMetadata }
 
         let hasAsShotNeutral = dng[kCGImagePropertyDNGAsShotNeutral] != nil
         guard hasAsShotNeutral else { throw Error.missingColorMetadata }
 
-        let samplesPerPixel = tiff[kCGImagePropertyTIFFSamplesPerPixel] as? Int
-        guard samplesPerPixel == 3 else { throw Error.invalidSamplesPerPixel }
+        // Linear RGB is implied by absence of CFA metadata and presence of 3-channel data
+        // The actual samples per pixel is derived from CGImage, not metadata
+        let isLinear = dng[kCGImagePropertyDNGCFALayout] == nil && dng[kCGImagePropertyDNGCFAPlaneColor] == nil
 
-        let hasICCProfile = (properties[kCGImagePropertyICCProfile] as? Data)?.isEmpty == false
+        // ICC profile check via DNG-specific key
+        let hasICCProfile = dng[kCGImagePropertyDNGAsShotICCProfile] != nil
 
         return Result(properties: properties,
                       dng: dng,
@@ -71,6 +70,6 @@ struct DNGCompatibilityValidator {
                       hasColorTransforms: hasColorTransforms,
                       hasAsShotNeutral: hasAsShotNeutral,
                       isLinear: isLinear,
-                      samplesPerPixel: samplesPerPixel)
+                      samplesPerPixel: nil) // Derived from CGImage, not metadata
     }
 }

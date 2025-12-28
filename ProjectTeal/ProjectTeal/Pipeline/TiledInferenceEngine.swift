@@ -274,12 +274,12 @@ struct TiledInferenceEngine {
             maxTileBytes = max(maxTileBytes, tileBytes)
             maxGainTileBytes = max(maxGainTileBytes, tileBytes)
 
-            let crop = crop(image: image, placement: placement)
+            let tileCrop = crop(image: image, placement: placement)
             let gainCrop = crop(image: fullResGain, placement: placement)
             let gainTile = GainFieldTile(width: gainCrop.width, height: gainCrop.height, pixels: gainCrop.pixels)
 
             let tileStart = CFAbsoluteTimeGetCurrent()
-            let processed = tileProcessor(crop, placement.context, gainTile)
+            let processed = tileProcessor(tileCrop, placement.context, gainTile)
             let tileEnd = CFAbsoluteTimeGetCurrent()
             tileDurations.append(tileEnd - tileStart)
 

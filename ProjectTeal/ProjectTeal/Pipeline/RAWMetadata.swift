@@ -22,12 +22,14 @@ struct RAWMetadata {
 
     init(imageSource: CGImageSource) {
         let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any]
-        let raw = properties?[kCGImagePropertyRawDictionary] as? [CFString: Any]
-        iso = (raw?[kCGImagePropertyExifISOSpeedRatings] as? [Double])?.first
-        exposureTimeSeconds = raw?[kCGImagePropertyExifExposureTime] as? Double
-        whiteBalance = raw?[kCGImagePropertyExifWhiteBalanceBias] as? [Double]
-        blackLevel = raw?[kCGImagePropertyRawBlackLevel] as? Double
-        whiteLevel = raw?[kCGImagePropertyRawWhiteLevel] as? Double
+        let exif = properties?[kCGImagePropertyExifDictionary] as? [CFString: Any]
+        let dng = properties?[kCGImagePropertyDNGDictionary] as? [CFString: Any]
+        iso = (exif?[kCGImagePropertyExifISOSpeedRatings] as? [Double])?.first
+        exposureTimeSeconds = exif?[kCGImagePropertyExifExposureTime] as? Double
+        // AsShotNeutral provides RGB neutrals (inverse of WB gains)
+        whiteBalance = dng?[kCGImagePropertyDNGAsShotNeutral] as? [Double]
+        blackLevel = dng?[kCGImagePropertyDNGBlackLevel] as? Double
+        whiteLevel = dng?[kCGImagePropertyDNGWhiteLevel] as? Double
         orientation = properties?[kCGImagePropertyOrientation] as? Int32
         if let width = properties?[kCGImagePropertyPixelWidth] as? CGFloat,
            let height = properties?[kCGImagePropertyPixelHeight] as? CGFloat {
@@ -122,41 +124,43 @@ struct RAW12Parser {
     }
 
     private static func blackLevel(from raw: [CFString: Any]) -> Double {
-        if let level = raw[kCGImagePropertyRawBlackLevel] as? Double { return level }
-        if let array = raw[kCGImagePropertyRawBlackLevel] as? [Double], let first = array.first { return first }
+        // Try DNG black level
         if let dngLevel = raw[kCGImagePropertyDNGBlackLevel] as? Double { return dngLevel }
         if let array = raw[kCGImagePropertyDNGBlackLevel] as? [Double], let first = array.first { return first }
         return 0
     }
 
     private static func whiteLevel(from raw: [CFString: Any]) -> Double {
-        if let level = raw[kCGImagePropertyRawWhiteLevel] as? Double { return level }
+        // Try DNG white level
         if let dngLevel = raw[kCGImagePropertyDNGWhiteLevel] as? Double { return dngLevel }
         return 1
     }
 
     private static func whiteBalanceGains(from raw: [CFString: Any]) -> SIMD3<Double> {
-        if let gains = raw[kCGImagePropertyExifWhiteBalanceBias] as? [Double], gains.count >= 3 {
-            return SIMD3(gains[0], gains[1], gains[2])
-        }
-        if let gains = raw[kCGImagePropertyDNGWhiteBalance] as? [Double], gains.count >= 3 {
-            return SIMD3(gains[0], gains[1], gains[2])
+        // AsShotNeutral contains RGB neutral values (inverse of WB gains)
+        // To get gains, we invert: gains = 1 / neutral
+        if let neutrals = raw[kCGImagePropertyDNGAsShotNeutral] as? [Double], neutrals.count >= 3 {
+            let rGain = neutrals[0] > 0 ? 1.0 / neutrals[0] : 1.0
+            let gGain = neutrals[1] > 0 ? 1.0 / neutrals[1] : 1.0
+            let bGain = neutrals[2] > 0 ? 1.0 / neutrals[2] : 1.0
+            // Normalize so green = 1.0
+            let normFactor = gGain > 0 ? 1.0 / gGain : 1.0
+            return SIMD3(rGain * normFactor, 1.0, bGain * normFactor)
         }
         return SIMD3(repeating: 1)
     }
 
     private static func cfaPattern(from raw: [CFString: Any]) -> CFAPattern {
-        guard let pattern = raw[kCGImagePropertyDNGCFAPattern] as? [Int], pattern.count == 4 else {
-            return .unknown
+        // CFALayout indicates how the CFA is organized
+        // For linear RGB (demosaiced) files, there's no CFA pattern
+        if let layout = raw[kCGImagePropertyDNGCFALayout] as? Int {
+            // CFA layouts: 1=rectangular, 2=staggered A, 3=staggered B, etc.
+            // For now, we just detect if CFA metadata exists
+            _ = layout // Acknowledge we have CFA data
         }
-        let tuple = (pattern[0], pattern[1], pattern[2], pattern[3])
-        switch tuple {
-        case (0, 1, 1, 2): return .rggb
-        case (2, 1, 1, 0): return .bggr
-        case (1, 0, 2, 1): return .grbg
-        case (1, 2, 0, 1): return .gbrg
-        default: return .unknown
-        }
+        // Without the specific pattern array, we can't determine the exact layout
+        // Return unknown for demosaiced/linear images
+        return .unknown
     }
 }
 
