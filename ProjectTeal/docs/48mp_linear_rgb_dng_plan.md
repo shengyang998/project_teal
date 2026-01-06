@@ -79,3 +79,4 @@ ProRAW48 channels to strip local tone mapping without residual prediction.
 - **Forward operator validation**: implement the quad-bayer mosaic + 2×2 bin forward operator with synthetic-pattern tests to guarantee differentiable parity with the device binner.
 - **Data hygiene**: keep a repeatable pipeline for linearizing RAW12 and ProRAW48 captures (scripted in Python/Swift) so training/eval sets are traceable and re-runnable.
 - **iOS prototyping**: stand up a minimal tiled inference prototype (no model yet) to validate memory/latency envelopes for 48MP processing on target devices.
+- **Analysis parity**: share forward-operator, channel-scale, and gain-field logic with Python/CI visualization helpers (histograms and side-by-sides) so ingest paths and debugging artifacts stay aligned.
